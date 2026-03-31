@@ -1,0 +1,253 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String?
+  phone         String?
+  role          UserRole  @default(CUSTOMER)
+  
+  // Address fields
+  street        String?
+  city          String?
+  state         String?
+  zipCode       String?
+  country       String?
+  
+  // B2B fields
+  company       String?
+  gstNumber     String?
+  
+  // Relations
+  carts         Cart[]
+  orders        Order[]
+  reviews       Review[]
+  savedVehicles VehicleProfile[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum UserRole {
+  CUSTOMER
+  MECHANIC
+  GARAGE
+  ADMIN
+}
+
+model VehicleProfile {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  vehicleType String
+  brand       String
+  model       String
+  year        Int
+  engine      String?
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([userId])
+}
+
+model Product {
+  id            String    @id @default(cuid())
+  name          String
+  slug          String    @unique
+  description   String
+  longDescription String?
+  image         String
+  images        String?   // JSON array of image URLs
+  
+  // Product classification
+  type          ProductType
+  viscosity     String?   // e.g., "10W-40", "5W-30"
+  quantity      Int       // in ml
+  quantityUnit  String    @default("ml")
+  
+  // Pricing
+  price         Float
+  bulkPrice     Float?    // Price for bulk orders (50+ units)
+  discount      Float?    // Percentage discount
+  
+  // Compatibility
+  vehicleTypes  String?   // JSON array: ["Bike", "Car", "Truck"]
+  
+  // Additional info
+  benefits      String?   // JSON array
+  specifications String?  // JSON array
+  compatibility String?   // JSON object with detailed compatibility
+  
+  stock         Int       @default(100)
+  sku           String    @unique
+  
+  featured      Boolean   @default(false)
+  active        Boolean   @default(true)
+  
+  // Relations
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  reviews       Review[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@index([type])
+  @@index([viscosity])
+}
+
+enum ProductType {
+  ENGINE_OIL
+  GEAR_OIL
+  HYDRAULIC_OIL
+  GREASE
+  INDUSTRIAL_OILS
+}
+
+model Cart {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  items     CartItem[]
+  
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  
+  @@unique([userId])
+  @@index([userId])
+}
+
+model CartItem {
+  id        String    @id @default(cuid())
+  cartId    String
+  cart      Cart      @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  
+  productId String
+  product   Product   @relation(fields: [productId], references: [id])
+  
+  quantity  Int       @default(1)
+  price     Float     // Price at time of adding to cart
+  
+  @@unique([cartId, productId])
+  @@index([cartId])
+  @@index([productId])
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  
+  // Order details
+  items         OrderItem[]
+  status        OrderStatus @default(PENDING)
+  
+  // Pricing
+  subtotal      Float
+  tax           Float
+  shipping      Float
+  total         Float
+  
+  // Shipping info
+  shippingStreet String
+  shippingCity   String
+  shippingState  String
+  shippingZip    String
+  
+  // Payment
+  paymentMethod String
+  paymentStatus PaymentStatus @default(PENDING)
+  stripePaymentId String?
+  
+  notes         String?
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id        String    @id @default(cuid())
+  orderId   String
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  productId String
+  product   Product   @relation(fields: [productId], references: [id])
+  
+  quantity  Int
+  price     Float     // Price at time of purchase
+  
+  @@index([orderId])
+  @@index([productId])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model Review {
+  id        String    @id @default(cuid())
+  productId String
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  
+  rating    Int       // 1-5
+  title     String
+  comment   String
+  helpful   Int       @default(0)
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@index([productId])
+  @@index([userId])
+}
+
+model VehicleCompatibility {
+  id          String    @id @default(cuid())
+  vehicleType String    // "Bike", "Car", "Truck"
+  brand       String
+  model       String
+  year        Int
+  engine      String?
+  
+  recommendedProducts String? // JSON array of product IDs
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@unique([vehicleType, brand, model, year])
+  @@index([vehicleType])
+  @@index([brand])
+}
