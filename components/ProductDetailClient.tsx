@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FiArrowLeft, FiCheck, FiHeart, FiShoppingCart, FiStar } from 'react-icons/fi';
+import { FiArrowLeft, FiCheck, FiHeart, FiShoppingCart, FiStar, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { Product } from '@/types';
 import { formatPrice } from '@/lib/utils';
 import { useCart } from '@/hooks/store';
@@ -22,16 +22,43 @@ export default function ProductDetailClient({ product, relatedProducts }: Produc
   const [addedToCart, setAddedToCart] = useState(false);
   const { addItem } = useCart();
 
-  const gallery = useMemo(() => [product.image, ...(product.images || [])], [product]);
+  const gallery = useMemo(() => [product.image, ...(product.images || [])].filter(Boolean), [product]);
+  const canScrollImages = gallery.length > 1;
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
   const finalPrice = product.bulkPrice || product.price;
   const bulkDiscount = product.bulkPrice
     ? Math.round(((product.price - product.bulkPrice) / product.price) * 100)
     : 0;
 
+  useEffect(() => {
+    setMainImage(0);
+    if (scrollerRef.current) scrollerRef.current.scrollLeft = 0;
+  }, [product.slug]);
+
   const handleAddToCart = () => {
     addItem(product as Product, quantity);
     setAddedToCart(true);
     window.setTimeout(() => setAddedToCart(false), 1600);
+  };
+
+  const scrollToIndex = (index: number) => {
+    const scroller = scrollerRef.current;
+    if (!scroller) {
+      setMainImage(Math.max(0, Math.min(index, gallery.length - 1)));
+      return;
+    }
+    const width = scroller.clientWidth || 1;
+    const nextIndex = Math.max(0, Math.min(index, gallery.length - 1));
+    scroller.scrollTo({ left: nextIndex * width, behavior: 'smooth' });
+    setMainImage(nextIndex);
+  };
+
+  const handleScroll = () => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    const width = scroller.clientWidth || 1;
+    const nextIndex = Math.round(scroller.scrollLeft / width);
+    if (nextIndex !== mainImage) setMainImage(nextIndex);
   };
 
   return (
@@ -52,24 +79,80 @@ export default function ProductDetailClient({ product, relatedProducts }: Produc
 
         <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr]">
           <div className="space-y-4">
-            <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5">
-              <Image
-                src={gallery[mainImage] || product.image}
-                alt={product.name}
-                width={900}
-                height={1200}
-                className="h-full w-full object-contain p-8"
-              />
+            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/5">
+              {canScrollImages ? (
+                <div
+                  ref={scrollerRef}
+                  onScroll={handleScroll}
+                  className="flex w-full snap-x snap-mandatory overflow-x-auto scroll-smooth touch-pan-x [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                >
+                  {gallery.map((src, index) => (
+                    <div key={`${src}-${index}`} className="relative w-full shrink-0 snap-center">
+                      <div className="relative aspect-[4/5] w-full">
+                        <Image
+                          src={src}
+                          alt={`${product.name} ${index + 1}`}
+                          fill
+                          sizes="(min-width: 1024px) 48vw, 100vw"
+                          className="object-contain p-8"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="relative aspect-[4/5] w-full">
+                  <Image
+                    src={gallery[0] || product.image}
+                    alt={product.name}
+                    fill
+                    sizes="(min-width: 1024px) 48vw, 100vw"
+                    className="object-contain p-8"
+                  />
+                </div>
+              )}
+
+              {canScrollImages ? (
+                <>
+                  <button
+                    type="button"
+                    aria-label="Previous image"
+                    onClick={() => scrollToIndex(mainImage - 1)}
+                    disabled={mainImage === 0}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full border border-white/10 bg-black/35 p-2 text-white backdrop-blur transition-colors hover:bg-black/45 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <FiChevronLeft size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Next image"
+                    onClick={() => scrollToIndex(mainImage + 1)}
+                    disabled={mainImage === gallery.length - 1}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full border border-white/10 bg-black/35 p-2 text-white backdrop-blur transition-colors hover:bg-black/45 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <FiChevronRight size={18} />
+                  </button>
+
+                  <div className="pointer-events-none absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
+                    {gallery.map((_, index) => (
+                      <span
+                        key={index}
+                        className={`h-1.5 w-1.5 rounded-full ${index === mainImage ? 'bg-white' : 'bg-white/40'}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              ) : null}
             </div>
 
-            <div className="grid grid-cols-4 gap-3">
+            <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-4 md:overflow-visible md:pb-0">
               {gallery.map((image, index) => (
                 <button
                   key={image}
-                  onClick={() => setMainImage(index)}
+                  onClick={() => scrollToIndex(index)}
                   className={`overflow-hidden rounded-2xl border-2 transition-all ${
                     index === mainImage ? 'border-primary-accent' : 'border-white/10'
-                  }`}
+                  } shrink-0 md:shrink`}
                 >
                   <Image
                     src={image}

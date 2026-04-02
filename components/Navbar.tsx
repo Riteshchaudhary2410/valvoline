@@ -127,7 +127,7 @@ export default function Navbar() {
                 ) : (
                   <Link
                     href="/login"
-                    className="hidden sm:inline-flex rounded-full border border-[#df3b2f] bg-[#df3b2f] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#ef4d41]"
+                    className="inline-flex rounded-full border border-[#df3b2f] bg-[#df3b2f] px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold text-white transition-colors hover:bg-[#ef4d41]"
                   >
                     Login
                   </Link>
@@ -238,6 +238,44 @@ export default function Navbar() {
             ))}
           </div>
 
+          <div className="space-y-3 border-t border-slate-200 pt-5">
+            {isLoggedIn ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  onClick={closeMenu}
+                  className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-semibold text-slate-700 transition-colors hover:border-[#1d5db8] hover:text-[#1d5db8]"
+                >
+                  <div className="flex items-center gap-2">
+                    <FiUser size={16} />
+                    <span>{user?.name || 'Account'}</span>
+                  </div>
+                  <FiChevronRight size={16} />
+                </Link>
+                <button
+                  onClick={() => {
+                    logout();
+                    closeMenu();
+                  }}
+                  className="w-full flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-semibold text-slate-700 transition-colors hover:border-[#df3b2f] hover:text-[#df3b2f]"
+                >
+                  <div className="flex items-center gap-2">
+                    <FiLogOut size={16} />
+                    <span>Logout</span>
+                  </div>
+                  <FiChevronRight size={16} />
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                onClick={closeMenu}
+                className="flex w-full items-center justify-center rounded-full border border-[#df3b2f] bg-[#df3b2f] px-5 py-3 font-semibold text-white transition-colors hover:bg-[#ef4d41]"
+              >
+                Login
+              </Link>
+            )}
+          </div>
           <div className="rounded-3xl border border-[rgba(29,93,184,0.15)] bg-[rgba(29,93,184,0.06)] p-4">
             <p className="text-sm font-semibold text-[#1d5db8]">Store support</p>
             <p className="mt-2 text-sm text-slate-600">

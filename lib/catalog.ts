@@ -27,6 +27,7 @@ export interface HomeLineupCard {
   description: string;
   accent: string;
   surface: string;
+  coverImage?: string;
   tone: 'light' | 'dark';
   productSlugs: string[];
   bullets: string[];
@@ -110,6 +111,7 @@ export const HOME_LINEUP_CARDS: HomeLineupCard[] = [
     description: 'Bike-focused lubricants built around the Champ, Fit, SynPower, and 4T Premium range for daily riders and workshop counters.',
     accent: '#df3b2f',
     surface: 'linear-gradient(145deg, rgba(15,33,68,0.96), rgba(26,67,136,0.9))',
+    coverImage: '/motorcycle_segment_img.png',
     tone: 'dark',
     productSlugs: ['valvoline-synpower-4t-10w40', 'valvoline-champ-4t-fuel-efficient', 'valvoline-fit-4t-20w40'],
     bullets: ['Champ, Fit, and SynPower', 'Commuter to premium bike viscosities'],
@@ -121,8 +123,9 @@ export const HOME_LINEUP_CARDS: HomeLineupCard[] = [
     description: 'Full synthetic and high-mileage picks tailored to modern cars and repeat maintenance visits.',
     accent: '#1d5db8',
     surface: 'linear-gradient(145deg, rgba(232,240,251,0.98), rgba(255,255,255,0.96))',
+    coverImage: '/passerger_car_img.png',
     tone: 'light',
-    productSlugs: ['valvoline-all-climate-10w40'],
+    productSlugs: ['valvoline-advanced-full-synthetic-5w30', 'valvoline-high-mileage-10w40'],
     bullets: ['Daily commute viscosities', 'High-kilometre recommendations'],
   },
   {
@@ -132,8 +135,9 @@ export const HOME_LINEUP_CARDS: HomeLineupCard[] = [
     description: 'Service-bay friendly protection for loaded vehicles, fleet maintenance, and harder operating cycles.',
     accent: '#df3b2f',
     surface: 'linear-gradient(145deg, rgba(255,244,241,0.96), rgba(255,255,255,0.98))',
+    coverImage: '/heavy_truck_img.png',
     tone: 'light',
-    productSlugs: ['valvoline-all-climate-10w40', 'valvoline-synthetic-gear-oil-75w110', 'valvoline-hydraulic-oil-iso32'],
+    productSlugs: ['valvoline-high-mileage-10w40', 'valvoline-synthetic-gear-oil-75w110', 'valvoline-hydraulic-oil-iso32'],
     bullets: ['Truck and drivetrain support', 'Built for higher load intervals'],
   },
   {
@@ -143,6 +147,7 @@ export const HOME_LINEUP_CARDS: HomeLineupCard[] = [
     description: 'Counter-ready grease and drivetrain products for joints, bearings, gearboxes, and workshop upkeep.',
     accent: '#1d5db8',
     surface: 'linear-gradient(145deg, rgba(244,248,255,0.98), rgba(227,237,251,0.94))',
+    coverImage: '/Graeseand_gearguard_img.png',
     tone: 'light',
     productSlugs: ['valvoline-multi-purpose-grease-nlgi2', 'valvoline-gear-oil-80w90', 'valvoline-chassis-grease-ep'],
     bullets: ['Bearings to final drives', 'Multipurpose workshop coverage'],
@@ -154,6 +159,7 @@ export const HOME_LINEUP_CARDS: HomeLineupCard[] = [
     description: 'Hydraulic and machine-oil support for lifts, shop equipment, and industrial service environments.',
     accent: '#df3b2f',
     surface: 'linear-gradient(145deg, rgba(13,23,45,0.98), rgba(38,52,78,0.94))',
+    coverImage: '/Hydrolic_instustry_covr_img.png',
     tone: 'dark',
     productSlugs: ['valvoline-hydraulic-oil-iso32', 'valvoline-industrial-machine-oil'],
     bullets: ['Lift and machine support', 'Useful beyond vehicle-only catalogs'],
@@ -166,7 +172,7 @@ export const HOME_LINEUP_CARDS: HomeLineupCard[] = [
     accent: '#1d5db8',
     surface: 'linear-gradient(145deg, rgba(255,255,255,0.98), rgba(242,246,252,0.98))',
     tone: 'light',
-    productSlugs: ['valvoline-all-climate-10w40'],
+    productSlugs: ['valvoline-advanced-full-synthetic-5w30'],
     bullets: ['Vehicle, model, and km logic', 'Designed for confident upsell conversations'],
     kind: 'selector',
   },
@@ -204,7 +210,7 @@ export const RECENT_ORDERS: OrderPreview[] = [
     status: 'Delivered',
     total: 4299,
     items: [
-      { productSlug: 'valvoline-all-climate-10w40', quantity: 4 },
+      { productSlug: 'valvoline-advanced-full-synthetic-5w30', quantity: 4 },
       { productSlug: 'valvoline-multi-purpose-grease-nlgi2', quantity: 6 },
     ],
   },
@@ -474,13 +480,57 @@ const productSeeds: ProductSeed[] = [
     active: true,
   },
   {
+  name: 'Valvoline Universal 20W-50',
+  slug: 'valvoline-universal-20w50',
+  brand: 'Valvoline Universal',
+  description: 'Reliable multi-grade engine oil designed for older cars and vehicles operating under tougher conditions.',
+  longDescription:
+    'Valvoline Universal 20W-50 is a durable engine oil formulated to provide dependable protection for older engines and vehicles operating in high-temperature or heavy-load conditions. Its thicker viscosity helps maintain oil pressure, reduce engine wear, and ensure consistent performance in demanding environments. Ideal for daily drivers, taxis, and commercial vehicles that require a strong and stable lubricant.',
+  image: "/universal.webp",
+  images: [
+    createSvgPlaceholder('20W-50', 'Front'),
+    createSvgPlaceholder('20W-50', 'Back'),
+    createSvgPlaceholder('20W-50', 'Workshop'),
+  ],
+  type: 'ENGINE_OIL',
+  viscosity: '20W-50',
+  quantity: 3000, // based on image (3L)
+  quantityUnit: 'ml',
+  price: 999,
+  bulkPrice: 899,
+  discount: 10,
+  vehicleTypes: ['Car', 'Truck'],
+  useCase: 'Older cars, high-temperature driving, taxis, and commercial vehicles',
+  benefits: [
+    'Strong oil film for engine protection',
+    'Maintains oil pressure in older engines',
+    'Good heat resistance',
+    'Reliable performance under heavy load'
+  ],
+  specifications: [
+    '20W-50 grade',
+    'API SM/CF',
+    'Multi-grade engine oil',
+    'Suitable for petrol and diesel engines'
+  ],
+  compatibilityNotes: [
+    'Best suited for older engines or vehicles requiring thicker viscosity oil'
+  ],
+  recommendedKmRange: [50000, 250000],
+  serviceIntervalKm: 8000,
+  stock: 140,
+  sku: 'VLV-UNI-20W50-3L',
+  featured: true,
+  active: true,
+},
+  {
     name: 'Valvoline Gear Oil SAE 80W-90',
     slug: 'valvoline-gear-oil-80w90',
     brand: 'Valvoline Gear',
     description: 'Reliable gear oil for manual transmissions, differentials, and drivetrain service.',
     longDescription:
       'A staple for workshops servicing transmissions and differentials. It improves smooth gear engagement and keeps metal surfaces protected under load.',
-    image: createSvgPlaceholder('80W-90', 'Gear Oil', '#da7a22'),
+    image: "/geargard-80w90-1L.webp",
     images: [createSvgPlaceholder('80W-90', 'Gear Front', '#da7a22')],
     type: 'GEAR_OIL',
     viscosity: '80W-90',
@@ -501,40 +551,13 @@ const productSeeds: ProductSeed[] = [
     active: true,
   },
   {
-    name: 'Valvoline Synthetic Gear Oil 75W-110',
-    slug: 'valvoline-synthetic-gear-oil-75w110',
-    brand: 'Valvoline Gear Pro',
-    description: 'High-load synthetic gear oil designed for commercial and heavy-duty applications.',
-    longDescription:
-      'This synthetic gear oil supports heavier loads and hotter operating conditions, making it a smart recommendation for trucks and high-torque drivetrains.',
-    image: createSvgPlaceholder('75W-110', 'Synthetic Gear', '#c44d0e'),
-    images: [createSvgPlaceholder('75W-110', 'Front', '#c44d0e')],
-    type: 'GEAR_OIL',
-    viscosity: '75W-110',
-    quantity: 1000,
-    quantityUnit: 'ml',
-    price: 699,
-    bulkPrice: 579,
-    discount: 17,
-    vehicleTypes: ['Car', 'Truck'],
-    useCase: 'Heavy-duty gearboxes, loaded vehicles, and heat-stressed drivetrains',
-    benefits: ['Extreme pressure support', 'Thermal stability', 'Longer service life'],
-    specifications: ['Synthetic EP base', 'Heavy-load protection', 'Fleet ready'],
-    compatibilityNotes: ['Best match for trucks and high torque vehicles'],
-    serviceIntervalKm: 35000,
-    stock: 120,
-    sku: 'VLV-GEAR-75W110-1L',
-    featured: false,
-    active: true,
-  },
-  {
     name: 'Valvoline Multi-Purpose Grease NLGI 2',
     slug: 'valvoline-multi-purpose-grease-nlgi2',
     brand: 'Valvoline Grease',
     description: 'Universal grease for bearings, joints, and general workshop maintenance.',
     longDescription:
       'A dependable workshop grease used for bearings, chassis points, and service routines. It is easy to recommend for garages serving mixed vehicle types.',
-    image: createSvgPlaceholder('NLGI 2', 'Grease', '#f2a65a'),
+    image: "/Multipurpose_graese_500gm.jpg",
     images: [createSvgPlaceholder('NLGI 2', 'Front', '#f2a65a')],
     type: 'GREASE',
     quantity: 500,
@@ -554,13 +577,101 @@ const productSeeds: ProductSeed[] = [
     active: true,
   },
   {
+  name: 'Valvoline All Fleet Multi 20W-40',
+  slug: 'valvoline-all-fleet-multi-20w40',
+  brand: 'All Fleet-10L',
+  description: 'Heavy-duty diesel engine oil designed for commercial vehicles and fleet operations.',
+  longDescription:
+    'Valvoline All Fleet Multi 20W-40 is engineered for diesel engines operating under heavy load and demanding conditions. It delivers strong protection against wear, maintains engine cleanliness, and ensures reliable performance for trucks, tractors, and fleet vehicles. Ideal for long operating hours and commercial usage where durability and consistency are essential.',
+  image: '/All_FleetMulti_10L.png',
+  images: [
+    "/All_FleetMulti_10L.png",
+    createSvgPlaceholder('20W-40', 'Bucket'),
+    createSvgPlaceholder('20W-40', 'Fleet Use'),
+  ],
+  type: 'ENGINE_OIL',
+  viscosity: '20W-40',
+  quantity: 10000, // bucket approx (10L)
+  quantityUnit: 'ml',
+  price: 3999,
+  bulkPrice: 3599,
+  discount: 10,
+  vehicleTypes: ['Truck', 'Tractor', 'Bus'],
+  useCase: 'Fleet vehicles, trucks, tractors, and commercial diesel engines',
+  benefits: [
+    'Strong wear protection under heavy load',
+    'Maintains engine cleanliness',
+    'Stable performance in long operations',
+    'Reliable for fleet usage'
+  ],
+  specifications: [
+    '20W-40 grade',
+    'API CH-4',
+    'Diesel engine oil',
+    'Heavy-duty formulation'
+  ],
+  compatibilityNotes: [
+    'Recommended for commercial diesel engines and fleet operations'
+  ],
+  recommendedKmRange: [20000, 300000],
+  serviceIntervalKm: 8000,
+  stock: 80,
+  sku: 'VLV-FLEET-20W40-10L',
+  featured: true,
+  active: true,
+},
+{
+  name: 'Valvoline Multi Purpose Grease NLGI 3',
+  slug: 'valvoline-multi-purpose-grease-nlgi-3',
+  brand: 'Valvoline',
+  description: 'High-performance multi-purpose grease for general lubrication across automotive and industrial applications.',
+  longDescription:
+    'Valvoline Multi Purpose Grease NLGI 3 is a versatile, high-performance grease designed for a wide range of lubrication needs. It provides excellent protection against wear, corrosion, and moisture, making it suitable for automotive components, machinery, and general-purpose applications. Its consistency ensures stable performance in varying temperatures and load conditions.',
+  image: "/multipurpose_grease_5Kg.png",
+  images: [
+    "/multipurpose_grease_5Kg.png",
+    createSvgPlaceholder('NLGI 3', 'Bucket'),
+    createSvgPlaceholder('NLGI 3', 'Application'),
+  ],
+  type: 'GREASE',
+  viscosity: "",
+  quantity: 5000,
+  quantityUnit: 'gm',
+  price: 2999,
+  bulkPrice: 2699,
+  discount: 10,
+  vehicleTypes: ['Car', 'Truck', 'Industrial'],
+  useCase: 'General lubrication, wheel bearings, chassis points, and industrial machinery',
+  benefits: [
+    'Excellent wear protection',
+    'Resistant to water and corrosion',
+    'Stable under varying temperatures',
+    'Reliable multi-purpose performance'
+  ],
+  specifications: [
+    'NLGI Grade 3',
+    'High performance grease',
+    'Multi-purpose application',
+    'Good mechanical stability'
+  ],
+  compatibilityNotes: [
+    'Suitable for automotive, agricultural, and industrial lubrication needs'
+  ],
+  recommendedKmRange: [0, 200000],
+  serviceIntervalKm: 20000,
+  stock: 120,
+  sku: 'VLV-GREASE-MP-5KG',
+  featured: true,
+  active: true,
+},
+  {
     name: 'Valvoline Chassis Grease EP',
     slug: 'valvoline-chassis-grease-ep',
     brand: 'Valvoline Heavy Duty',
     description: 'Extreme-pressure chassis grease for load-bearing joints and suspensions.',
     longDescription:
       'For heavier commercial applications, this grease adds load capacity and durability where chassis components need more protection.',
-    image: createSvgPlaceholder('EP', 'Chassis Grease', '#bb681e'),
+    image:"/crimson20.webp",
     images: [createSvgPlaceholder('EP', 'Front', '#bb681e')],
     type: 'GREASE',
     quantity: 500,
@@ -580,13 +691,56 @@ const productSeeds: ProductSeed[] = [
     active: true,
   },
   {
+  name: 'Valvoline Geargard EP 80W-90',
+  slug: 'valvoline-geargard-ep-80w90',
+  brand: 'Valvoline Geargard',
+  description: 'High-performance gear oil designed to protect manual transmissions and differentials under load.',
+  longDescription:
+    'Valvoline Geargard EP 80W-90 is formulated with extreme pressure (EP) additives to provide reliable protection for gears operating under heavy load and stress. It helps reduce wear, ensures smooth gear shifting, and maintains performance in both passenger and commercial vehicles. Ideal for manual gearboxes, differentials, and axle applications requiring API GL-4 specification.',
+  image: '/geargard20ep_5L.webp',
+  images: [
+    createSvgPlaceholder('80W-90', 'Front'),
+    createSvgPlaceholder('80W-90', 'Back'),
+    createSvgPlaceholder('80W-90', 'Gear Use'),
+  ],
+  type: 'GEAR_OIL',
+  viscosity: '80W-90',
+  quantity: 5000,
+  quantityUnit: 'ml',
+  price: 3499,
+  bulkPrice: 3199,
+  discount: 9,
+  vehicleTypes: ['Car', 'Truck', 'Bus'],
+  useCase: 'Manual transmissions, differentials, and axle systems in cars and commercial vehicles',
+  benefits: [
+    'Excellent gear protection under load',
+    'Reduces wear and tear',
+    'Smooth gear shifting',
+    'Enhanced durability for gear components'
+  ],
+  specifications: [
+    'SAE 80W-90',
+    'API GL-4',
+    'Extreme Pressure (EP) formulation'
+  ],
+  compatibilityNotes: [
+    'Suitable for manual gearboxes and differential systems requiring GL-4 specification'
+  ],
+  recommendedKmRange: [0, 200000],
+  serviceIntervalKm: 20000,
+  stock: 90,
+  sku: 'VLV-GEAR-80W90-5L',
+  featured: true,
+  active: true,
+},
+  {
     name: 'Valvoline Hydraulic Oil ISO 32',
     slug: 'valvoline-hydraulic-oil-iso32',
     brand: 'Valvoline Industrial',
     description: 'Hydraulic fluid for fleet equipment, lift systems, and industrial machinery.',
     longDescription:
       'Built for hydraulic systems that need reliable anti-wear performance and smooth fluid response in temperature changes.',
-    image: createSvgPlaceholder('ISO 32', 'Hydraulic', '#e27b24'),
+    image:"/hydraulic-oil.jpg",
     images: [createSvgPlaceholder('ISO 32', 'Front', '#e27b24')],
     type: 'HYDRAULIC_OIL',
     viscosity: 'ISO 32',
@@ -613,7 +767,7 @@ const productSeeds: ProductSeed[] = [
     description: 'Versatile machine oil for plant equipment, pumps, and general industrial service.',
     longDescription:
       'A flexible service oil for industrial use where oxidation stability and dependable lubrication are more important than vehicle compatibility.',
-    image: createSvgPlaceholder('IND', 'Machine Oil', '#8f4214'),
+    image: "/drum_Oil.webp",
     images: [createSvgPlaceholder('IND', 'Front', '#8f4214')],
     type: 'INDUSTRIAL_OILS',
     quantity: 1000,
@@ -657,29 +811,29 @@ const recommendationProfiles: Record<VehicleType, { model: string; productSlugs:
   Car: [
     {
       model: 'Hyundai Creta',
-      productSlugs: ['valvoline-all-climate-10w40', 'valvoline-gear-oil-80w90'],
-      note: 'Modern SUVs benefit from a dependable passenger-car engine oil and matching drivetrain protection.',
+      productSlugs: ['valvoline-advanced-full-synthetic-5w30', 'valvoline-gear-oil-80w90'],
+      note: 'Modern SUVs benefit from a low-viscosity synthetic engine oil and matching drivetrain protection.',
     },
     {
       model: 'Honda City',
-      productSlugs: ['valvoline-all-climate-10w40', 'valvoline-multi-purpose-grease-nlgi2'],
-      note: 'A reliable everyday recommendation for passenger-car service visits and repeat maintenance.',
+      productSlugs: ['valvoline-advanced-full-synthetic-5w30', 'valvoline-multi-purpose-grease-nlgi2'],
+      note: 'A reliable everyday recommendation for refined petrol sedans.',
     },
     {
       model: 'Toyota Innova',
-      productSlugs: ['valvoline-all-climate-10w40', 'valvoline-synthetic-gear-oil-75w110'],
+      productSlugs: ['valvoline-high-mileage-10w40', 'valvoline-synthetic-gear-oil-75w110'],
       note: 'A strong fit for family and fleet vehicles that see long-haul use.',
     },
   ],
   Truck: [
     {
       model: 'Tata 407',
-      productSlugs: ['valvoline-all-climate-10w40', 'valvoline-synthetic-gear-oil-75w110', 'valvoline-hydraulic-oil-iso32'],
+      productSlugs: ['valvoline-high-mileage-10w40', 'valvoline-synthetic-gear-oil-75w110', 'valvoline-hydraulic-oil-iso32'],
       note: 'Commercial workhorses need heavier protection and support fluids.',
     },
     {
       model: 'Volvo FH',
-      productSlugs: ['valvoline-all-climate-10w40', 'valvoline-synthetic-gear-oil-75w110'],
+      productSlugs: ['valvoline-high-mileage-10w40', 'valvoline-synthetic-gear-oil-75w110'],
       note: 'Long-haul trucks benefit from heat stability and EP gear protection.',
     },
   ],
@@ -716,11 +870,8 @@ export const filterProducts = (filters: {
   maxPrice?: number;
 }) => {
   const search = filters.search?.trim().toLowerCase();
-  const inferEngineOilOnly =
-    !!filters.vehicleType && !filters.oilType && !search;
 
   return PRODUCT_CATALOG.filter((product) => {
-    if (inferEngineOilOnly && product.type !== 'ENGINE_OIL') return false;
     if (filters.oilType && product.type !== filters.oilType) return false;
     if (filters.viscosity && product.viscosity !== filters.viscosity) return false;
     if (filters.vehicleType && !product.vehicleTypes?.includes(filters.vehicleType)) return false;

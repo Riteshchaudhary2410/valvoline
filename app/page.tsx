@@ -14,7 +14,13 @@ const lineupCards = HOME_LINEUP_CARDS.map((card) => ({
 }));
 
 export default function Home() {
-  const featuredProducts = getFeaturedProducts().slice(0, 3);
+  const featuredProducts = getFeaturedProducts()
+    .sort((a, b) => {
+      if (a.slug === 'valvoline-all-fleet-multi-20w40') return -1;
+      if (b.slug === 'valvoline-all-fleet-multi-20w40') return 1;
+      return 0;
+    })
+    .slice(0, 3);
 
   return (
     <>
@@ -24,13 +30,13 @@ export default function Home() {
 
         <section className="py-16 md:py-20">
           <div className="container-max space-y-8">
-            <div className="mx-auto max-w-3xl space-y-4 text-center">
+            <div className="mx-auto max-w-5xl space-y-4 text-center">
               <p className="text-sm font-bold uppercase tracking-[0.3em] text-slate-400">Leading-edge lineup</p>
               <h2 className="text-3xl font-black tracking-tight text-white md:text-5xl">
-                A category grid inspired by the reference, rebuilt as a cleaner modern storefront.
+                A powerful lineup of Valvoline lubricants, built to deliver performance, protection, and reliability across every vehicle segment.
               </h2>
               <p className="text-base leading-7 text-slate-300 md:text-lg">
-                The structure stays familiar for lubricant shoppers, but the cards, copy, spacing, and hierarchy are more premium and easier to scan.
+                A streamlined lineup of Valvoline products, making it faster and easier to find the right solution for every vehicle.
               </p>
             </div>
 
@@ -84,46 +90,60 @@ export default function Home() {
                       </div>
                     ) : (
                       <div className="relative h-full">
-                        <div className="absolute -left-6 bottom-0 h-28 w-28 rounded-full bg-white/20 blur-3xl" />
-                        <div className="absolute -right-4 top-10 h-24 w-24 rounded-full bg-white/20 blur-2xl" />
-
-                        {card.products[0] ? (
-                          <div className="absolute bottom-4 left-2 w-[48%] rounded-[1.6rem] border border-white/40 bg-white/90 p-3 shadow-[0_20px_50px_rgba(16,41,75,0.16)]">
-                            <div className="relative aspect-[4/5] overflow-hidden rounded-[1.1rem] bg-white/80">
-                              <Image src={card.products[0].image} alt={card.products[0].name} fill className="object-contain p-4" />
-                            </div>
+                        {card.coverImage ? (
+                          <div className="absolute inset-0 overflow-hidden rounded-[1.7rem]">
+                            <Image
+                              src={card.coverImage}
+                              alt={`${card.title} cover`}
+                              fill
+                              className="object-cover object-center"
+                              sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
+                            />
                           </div>
-                        ) : null}
+                        ) : (
+                          <>
+                            <div className="absolute -left-6 bottom-0 h-28 w-28 rounded-full bg-white/20 blur-3xl" />
+                            <div className="absolute -right-4 top-10 h-24 w-24 rounded-full bg-white/20 blur-2xl" />
 
-                        {card.products[1] ? (
-                          <div
-                            className="absolute right-4 top-12 w-[34%] rounded-[1.35rem] border border-[rgba(255,255,255,0.25)] p-3 shadow-[0_20px_50px_rgba(16,41,75,0.18)]"
-                            style={{ background: card.tone === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.85)' }}
-                          >
-                            <div className="relative aspect-[4/5] overflow-hidden rounded-[1rem] bg-white/80">
-                              <Image src={card.products[1].image} alt={card.products[1].name} fill className="object-contain p-3" />
+                            {card.products[0] ? (
+                              <div className="absolute bottom-4 left-2 w-[48%] rounded-[1.6rem] border border-white/40 bg-white/90 p-3 shadow-[0_20px_50px_rgba(16,41,75,0.16)]">
+                                <div className="relative aspect-[4/5] overflow-hidden rounded-[1.1rem] bg-white/80">
+                                  <Image src={card.products[0].image} alt={card.products[0].name} fill className="object-contain p-4" />
+                                </div>
+                              </div>
+                            ) : null}
+
+                            {card.products[1] ? (
+                              <div
+                                className="absolute right-4 top-12 w-[34%] rounded-[1.35rem] border border-[rgba(255,255,255,0.25)] p-3 shadow-[0_20px_50px_rgba(16,41,75,0.18)]"
+                                style={{ background: card.tone === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.85)' }}
+                              >
+                                <div className="relative aspect-[4/5] overflow-hidden rounded-[1rem] bg-white/80">
+                                  <Image src={card.products[1].image} alt={card.products[1].name} fill className="object-contain p-3" />
+                                </div>
+                              </div>
+                            ) : null}
+
+                            {card.products[2] ? (
+                              <div className="absolute bottom-8 right-10 w-[28%] rounded-[1.15rem] border border-[rgba(255,255,255,0.25)] bg-[rgba(255,255,255,0.85)] p-2 shadow-[0_18px_40px_rgba(16,41,75,0.16)]">
+                                <div className="relative aspect-[4/5] overflow-hidden rounded-[0.9rem] bg-white/80">
+                                  <Image src={card.products[2].image} alt={card.products[2].name} fill className="object-contain p-2" />
+                                </div>
+                              </div>
+                            ) : null}
+
+                            <div
+                              className={`absolute bottom-4 right-4 max-w-[44%] rounded-[1.2rem] border px-3 py-2 backdrop-blur ${
+                                card.tone === 'dark'
+                                  ? 'border-white/20 bg-white/10 text-white'
+                                  : 'border-slate-200 bg-[rgba(255,255,255,0.85)] text-slate-700'
+                              }`}
+                            >
+                              <p className="text-[11px] font-bold uppercase tracking-[0.24em]">Range focus</p>
+                              <p className="mt-1 text-sm font-semibold">{card.bullets[0]}</p>
                             </div>
-                          </div>
-                        ) : null}
-
-                        {card.products[2] ? (
-                          <div className="absolute bottom-8 right-10 w-[28%] rounded-[1.15rem] border border-[rgba(255,255,255,0.25)] bg-[rgba(255,255,255,0.85)] p-2 shadow-[0_18px_40px_rgba(16,41,75,0.16)]">
-                            <div className="relative aspect-[4/5] overflow-hidden rounded-[0.9rem] bg-white/80">
-                              <Image src={card.products[2].image} alt={card.products[2].name} fill className="object-contain p-2" />
-                            </div>
-                          </div>
-                        ) : null}
-
-                        <div
-                          className={`absolute bottom-4 right-4 max-w-[44%] rounded-[1.2rem] border px-3 py-2 backdrop-blur ${
-                            card.tone === 'dark'
-                              ? 'border-white/20 bg-white/10 text-white'
-                              : 'border-slate-200 bg-[rgba(255,255,255,0.85)] text-slate-700'
-                          }`}
-                        >
-                          <p className="text-[11px] font-bold uppercase tracking-[0.24em]">Range focus</p>
-                          <p className="mt-1 text-sm font-semibold">{card.bullets[0]}</p>
-                        </div>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
@@ -246,16 +266,16 @@ export default function Home() {
           <div className="container-max space-y-8">
             <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div className="max-w-2xl space-y-3">
-                <p className="text-sm font-bold uppercase tracking-[0.28em] text-slate-400">Featured products</p>
+                <p className="text-sm font-bold uppercase tracking-[0.28em] text-slate-400">Trending this month</p>
                 <h2 className="text-3xl font-black tracking-tight text-white md:text-4xl">
-                  Product cards still do the selling work, now under a stronger homepage structure.
+                  What smart garages in provience no. - 2 are ordering right now.
                 </h2>
                 <p className="text-base leading-7 text-slate-300">
-                  The new landing page gets users into the right category faster, and these cards carry the detail once they are ready to compare real products.
+                  Fleet Multi 10L leads the chart. Paired with seasonal recommendations for bikes, trucks, and cars. Same-day delivery • Competitive bulk pricing • No middleman markup.
                 </p>
               </div>
-              <Link href="/products" className="btn btn-outline rounded-full px-5 py-3 text-sm font-semibold">
-                Browse full catalog
+              <Link href="/b2b" className="btn btn-outline rounded-full px-5 py-3 text-sm font-semibold">
+                Bulk discounts
                 <FiArrowRight size={16} />
               </Link>
             </div>

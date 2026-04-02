@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FiShoppingCart, FiHeart, FiStar, FiZap } from 'react-icons/fi';
+import { FiShoppingCart, FiHeart, FiStar, FiZap, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { Product } from '@/types';
 import { formatPrice } from '@/lib/utils';
 import { useCart } from '@/hooks/store';
@@ -16,7 +16,12 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [addedMessage, setAddedMessage] = useState('');
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const { addItem } = useCart();
+  const gallery = useMemo(() => [product.image, ...(product.images || [])].filter(Boolean), [product]);
+  const canScrollImages = gallery.length > 1;
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const pointerStateRef = useRef<{ pointerId: number; startX: number; startScrollLeft: number; moved: boolean } | null>(null);
 
   useEffect(() => {
     if (!addedMessage) return;
@@ -24,10 +29,79 @@ export default function ProductCard({ product }: ProductCardProps) {
     return () => clearTimeout(timer);
   }, [addedMessage]);
 
+  useEffect(() => {
+    setActiveImageIndex(0);
+    if (scrollerRef.current) {
+      scrollerRef.current.scrollLeft = 0;
+    }
+  }, [product.slug]);
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     addItem(product, quantity);
     setAddedMessage(`Added ${quantity} to cart`);
+  };
+
+  const scrollToIndex = (index: number) => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    const width = scroller.clientWidth || 1;
+    scroller.scrollTo({ left: Math.max(0, index) * width, behavior: 'smooth' });
+    setActiveImageIndex(Math.max(0, Math.min(index, gallery.length - 1)));
+  };
+
+  const handleImageScroll = () => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    const width = scroller.clientWidth || 1;
+    const nextIndex = Math.round(scroller.scrollLeft / width);
+    if (nextIndex !== activeImageIndex) setActiveImageIndex(nextIndex);
+  };
+
+  const handlePointerDown: React.PointerEventHandler<HTMLDivElement> = (event) => {
+    if (!canScrollImages) return;
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    pointerStateRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startScrollLeft: scroller.scrollLeft,
+      moved: false,
+    };
+    scroller.setPointerCapture(event.pointerId);
+  };
+
+  const handlePointerMove: React.PointerEventHandler<HTMLDivElement> = (event) => {
+    if (!canScrollImages) return;
+    const state = pointerStateRef.current;
+    const scroller = scrollerRef.current;
+    if (!state || !scroller) return;
+    const dx = event.clientX - state.startX;
+    if (Math.abs(dx) > 6) state.moved = true;
+    scroller.scrollLeft = state.startScrollLeft - dx;
+  };
+
+  const handlePointerUpOrCancel: React.PointerEventHandler<HTMLDivElement> = (event) => {
+    const state = pointerStateRef.current;
+    const scroller = scrollerRef.current;
+    if (state && scroller) {
+      try {
+        scroller.releasePointerCapture(event.pointerId);
+      } catch {
+        // ignore
+      }
+    }
+    pointerStateRef.current = null;
+  };
+
+  const handleClickCapture: React.MouseEventHandler<HTMLDivElement> = (event) => {
+    if (!canScrollImages) return;
+    const state = pointerStateRef.current;
+    if (state?.moved) {
+      event.preventDefault();
+      event.stopPropagation();
+      state.moved = false;
+    }
   };
 
   const finalPrice = product.bulkPrice || product.price;
@@ -40,13 +114,50 @@ export default function ProductCard({ product }: ProductCardProps) {
       <div className="relative">
         <Link href={`/products/${product.slug}`} className="block">
           <div className="relative aspect-[4/5] overflow-hidden bg-[#120605]">
-            <Image
-              src={product.image}
-              alt={product.name}
-              width={900}
-              height={1200}
-              className="h-full w-full object-contain p-6 transition-transform duration-500 group-hover:scale-105"
-            />
+            <div
+              className="absolute inset-0"
+              onClickCapture={handleClickCapture}
+            >
+              {canScrollImages ? (
+                <div
+                  ref={scrollerRef}
+                  onScroll={handleImageScroll}
+                  onPointerDown={handlePointerDown}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUpOrCancel}
+                  onPointerCancel={handlePointerUpOrCancel}
+                  onWheel={(event) => {
+                    const scroller = scrollerRef.current;
+                    if (!scroller) return;
+                    if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+                    if (scroller.scrollWidth <= scroller.clientWidth) return;
+                    event.preventDefault();
+                    scroller.scrollLeft += event.deltaY;
+                  }}
+                  className="flex h-full w-full snap-x snap-mandatory overflow-x-auto scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                >
+                  {gallery.map((src, index) => (
+                    <div key={`${src}-${index}`} className="relative h-full w-full shrink-0 snap-center">
+                      <Image
+                        src={src}
+                        alt={`${product.name} ${index + 1}`}
+                        fill
+                        sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
+                        className="object-contain p-6 transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <Image
+                  src={product.image}
+                  alt={product.name}
+                  fill
+                  sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
+                  className="object-contain p-6 transition-transform duration-500 group-hover:scale-105"
+                />
+              )}
+            </div>
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
 
@@ -54,6 +165,44 @@ export default function ProductCard({ product }: ProductCardProps) {
               <span className="badge badge-primary">{product.type.replace(/_/g, ' ')}</span>
               {product.featured && <span className="badge badge-secondary">Featured</span>}
             </div>
+
+            {canScrollImages ? (
+              <>
+                <div className="absolute right-14 top-4 flex items-center gap-1 rounded-full border border-white/10 bg-black/30 px-2 py-1 backdrop-blur">
+                  {gallery.map((_, index) => (
+                    <span
+                      key={index}
+                      className={`h-1.5 w-1.5 rounded-full ${index === activeImageIndex ? 'bg-white' : 'bg-white/40'}`}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  aria-label="Previous image"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    scrollToIndex(activeImageIndex - 1);
+                  }}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-white/10 bg-black/35 p-2 text-white opacity-0 backdrop-blur transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 sm:pointer-events-auto"
+                >
+                  <FiChevronLeft size={18} />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Next image"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    scrollToIndex(activeImageIndex + 1);
+                  }}
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-white/10 bg-black/35 p-2 text-white opacity-0 backdrop-blur transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 sm:pointer-events-auto"
+                >
+                  <FiChevronRight size={18} />
+                </button>
+              </>
+            ) : null}
 
             <div className="absolute bottom-4 left-4 right-4 rounded-3xl border border-white/10 bg-black/40 p-4 backdrop-blur">
               <div className="flex items-center justify-between gap-3">
