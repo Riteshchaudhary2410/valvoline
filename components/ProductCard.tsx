@@ -3,25 +3,35 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FiShoppingCart, FiHeart, FiStar, FiZap, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { useRouter } from 'next/navigation';
+import { FiShoppingCart, FiHeart, FiStar, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { Product } from '@/types';
 import { formatPrice } from '@/lib/utils';
 import { useCart } from '@/hooks/store';
+import { formatPackSize, getPackageVariants } from '@/lib/catalog';
 
 interface ProductCardProps {
   product: Product;
+  showPackageSizes?: boolean;
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, showPackageSizes = false }: ProductCardProps) {
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [quantity, setQuantity] = useState(1);
   const [addedMessage, setAddedMessage] = useState('');
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const { addItem } = useCart();
+  const { items, addItem, updateQuantity } = useCart();
+  const router = useRouter();
   const gallery = useMemo(() => [product.image, ...(product.images || [])].filter(Boolean), [product]);
   const canScrollImages = gallery.length > 1;
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const pointerStateRef = useRef<{ pointerId: number; startX: number; startScrollLeft: number; moved: boolean } | null>(null);
+  const packageVariants = useMemo(() => getPackageVariants(product), [product.name, product.sku, product.packageGroup]);
+  const isBikeOnly = product.vehicleTypes?.length === 1 && product.vehicleTypes[0] === 'Bike';
+  const canShowPackageSizes = showPackageSizes && !isBikeOnly && packageVariants.length > 1;
+  const cartQuantity = useMemo(
+    () => items.find((item) => item.product.id === product.id)?.quantity ?? 0,
+    [items, product.id],
+  );
 
   useEffect(() => {
     if (!addedMessage) return;
@@ -36,10 +46,12 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   }, [product.slug]);
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    addItem(product, quantity);
-    setAddedMessage(`Added ${quantity} to cart`);
+  const handleAddToCart = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (product.stock === 0) return;
+    addItem(product, 1);
+    setAddedMessage('Added to cart');
   };
 
   const scrollToIndex = (index: number) => {
@@ -108,6 +120,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const bulkDiscount = product.bulkPrice
     ? Math.round(((product.price - product.bulkPrice) / product.price) * 100)
     : 0;
+  const hasInCart = cartQuantity > 0;
+  const canIncrease = cartQuantity < product.stock;
 
   return (
     <div className="group flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/5 shadow-xl shadow-black/10 transition-all duration-300 hover:-translate-y-1 hover:border-primary-accent/40 hover:bg-white/10">
@@ -207,7 +221,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             <div className="absolute bottom-4 left-4 right-4 rounded-3xl border border-white/10 bg-black/40 p-4 backdrop-blur">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.24em] text-gray-300">{product.brand}</p>
+                  
                   <p className="mt-1 text-lg font-semibold leading-tight text-white">{product.name}</p>
                 </div>
                 {product.viscosity && (
@@ -215,64 +229,6 @@ export default function ProductCard({ product }: ProductCardProps) {
                     {product.viscosity}
                   </span>
                 )}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-1 flex-col gap-4 p-5">
-            <p className="text-sm text-gray-300">{product.description}</p>
-
-            <div className="grid grid-cols-2 gap-3 text-xs text-gray-400">
-              <div className="rounded-2xl border border-white/10 bg-black/15 p-3">
-                <p className="text-gray-500">Quantity</p>
-                <p className="mt-1 font-semibold text-white">
-                  {product.quantity} {product.quantityUnit}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-black/15 p-3">
-                <p className="text-gray-500">Use case</p>
-                <p className="mt-1 line-clamp-2 font-semibold text-white">
-                  {product.useCase || 'Workshop and retail use'}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1 text-sm text-amber-300">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <FiStar key={i} size={14} fill="currentColor" />
-              ))}
-              <span className="ml-1 text-gray-500">(garage-trusted)</span>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {product.vehicleTypes?.map((type) => (
-                <span key={type} className="badge badge-secondary">
-                  {type}
-                </span>
-              ))}
-            </div>
-
-            <div className="mt-auto rounded-3xl border border-primary-accent/15 bg-primary-accent/10 p-4">
-              <div className="flex items-end justify-between gap-3">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-primary-accent">Price</p>
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className="text-2xl font-bold text-white">{formatPrice(finalPrice)}</span>
-                    {product.bulkPrice && (
-                      <span className="text-xs line-through text-gray-500">{formatPrice(product.price)}</span>
-                    )}
-                  </div>
-                  {product.bulkPrice && (
-                    <p className="mt-1 inline-flex items-center gap-1 text-xs text-emerald-300">
-                      <FiZap size={12} />
-                      Save {bulkDiscount}% for bulk buyers
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-1 rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs text-gray-300">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  {product.stock} in stock
-                </div>
               </div>
             </div>
           </div>
@@ -287,42 +243,165 @@ export default function ProductCard({ product }: ProductCardProps) {
         </button>
       </div>
 
-      <div className="border-t border-white/10 p-4">
-        {addedMessage ? (
-          <p className="mb-3 text-sm text-emerald-300">{addedMessage}</p>
-        ) : null}
-        <div className="flex gap-2">
-          <div className="flex flex-1 items-center gap-2 rounded-2xl border border-white/10 bg-black/15 px-3 py-2">
-            <button
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="text-gray-400 transition-colors hover:text-primary-accent"
-            >
-              -
-            </button>
-            <input
-              type="number"
-              min="1"
-              max={product.stock}
-              value={quantity}
-              onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
-              className="w-full bg-transparent text-center text-sm font-semibold text-white focus:outline-none"
-            />
-            <button
-              onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-              className="text-gray-400 transition-colors hover:text-primary-accent"
-            >
-              +
-            </button>
-          </div>
-          <button
-            onClick={handleAddToCart}
-            disabled={product.stock === 0}
-            className="btn btn-primary flex-1 rounded-2xl text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <FiShoppingCart size={16} />
-            Add
-          </button>
+      <div
+        role="link"
+        tabIndex={0}
+        onClick={() => router.push(`/products/${product.slug}`)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            router.push(`/products/${product.slug}`);
+          }
+        }}
+        className="flex flex-1 cursor-pointer flex-col gap-4 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black/30"
+        aria-label={`View details for ${product.name}`}
+      >
+        <p className="line-clamp-2 text-[13px] leading-6 text-gray-300">{product.description}</p>
+        <div className="flex items-center gap-1 text-sm text-amber-300">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <FiStar key={i} size={14} fill="currentColor" />
+          ))}
+          <span className="ml-1 text-gray-500">(garage-trusted)</span>
         </div>
+
+        <div className="flex flex-wrap gap-2">
+          {product.vehicleTypes?.map((type) => (
+            <span key={type} className="badge badge-secondary">
+              {type}
+            </span>
+          ))}
+        </div>
+
+        {canShowPackageSizes ? (
+          <div className="rounded-2xl border border-white/10 bg-black/15 p-3">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-gray-500">
+              Pack size <span className="font-semibold tracking-normal text-gray-500">(Pack of 1)</span>
+            </p>
+            <div className="mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              {packageVariants.map((variant) => {
+                const isSelected = variant.slug === product.slug;
+                return (
+                  <button
+                    key={variant.slug}
+                    type="button"
+                    aria-label={`${variant.name} ${formatPackSize(variant)} (Pack of 1)`}
+                    aria-current={isSelected ? 'page' : undefined}
+                    disabled={isSelected}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      if (isSelected) return;
+                      router.push(`/products/${variant.slug}`);
+                    }}
+                    className={`min-w-[7.25rem] rounded-2xl border bg-black/20 px-3 py-2 text-left text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black/30 ${
+                      isSelected
+                        ? 'cursor-default border-[#1d5db8] ring-2 ring-[#1d5db8]/25'
+                        : 'border-white/10 hover:border-primary-accent/40'
+                    }`}
+                  >
+                    <p className="text-sm font-black leading-snug">{formatPackSize(variant)}</p>
+                    <p className="mt-1 text-xs font-semibold text-gray-300">{formatPrice(variant.bulkPrice || variant.price)}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          
+        ) : 
+        (
+          
+          <div className="grid grid-cols-2 gap-3 text-xs text-gray-400">
+            <div className="rounded-2xl border border-white/10 bg-black/15 p-3">
+              <p className="text-gray-500">Quantity</p>
+              <p className="mt-1 font-semibold text-white">
+                {product.quantity} {product.quantityUnit}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/15 p-3">
+              <p className="text-gray-500">Use case</p>
+              <p className="mt-1 line-clamp-2 font-semibold text-white">{product.useCase || 'Workshop and retail use'}</p>
+            </div>
+          </div>
+        )}
+        
+
+        <div className="flex items-stretch  gap-3">
+          <div className="min-w-0 flex-1 rounded-3xl border border-primary-accent/15 bg-primary-accent/10 px-4 py-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary-accent">Price</p>
+              <p className="min-w-0 truncate text-[10px] font-semibold text-gray-400">
+                {product.bulkPrice ? `Save ${bulkDiscount}% • ${product.stock} in stock` : `${product.stock} in stock`}
+              </p>
+            </div>
+            <div className="mt-1 flex flex-wrap items-baseline gap-2">
+              <span className="text-lg font-black text-white">{formatPrice(finalPrice)}</span>
+              {product.bulkPrice ? (
+                <span className="text-xs font-semibold text-gray-500 line-through">{formatPrice(product.price)}</span>
+              ) : null}
+            </div>
+          </div>
+          
+
+          <div className="rounded-3xl border border-white/10 bg-black/15 p-2 flex flex-col h-full justify-center">
+            <div
+              className={`relative h-12 overflow-hidden rounded-2xl bg-primary-accent text-[#1b0c04] shadow-[0_16px_38px_rgba(246,139,44,0.24)] transition-[width] duration-300 ease-out focus-within:ring-2 focus-within:ring-primary-accent/60 focus-within:ring-offset-2 focus-within:ring-offset-black/30 ${
+                hasInCart ? 'w-24' : 'w-24'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={product.stock === 0}
+                className={`absolute inset-0 flex h-11 w-full items-center justify-center gap-2 px-3 text-sm font-black transition-all duration-300 ${
+                  hasInCart ? 'pointer-events-none translate-y-2 opacity-0' : 'translate-y-0 opacity-100'
+                } disabled:cursor-not-allowed disabled:opacity-60`}
+                aria-label={`Add ${product.name} to cart`}
+              >
+                <FiShoppingCart size={16} />
+                Add
+              </button>
+
+              <div
+                className={`absolute inset-0 flex h-11 w-full items-center justify-between px-2 transition-all duration-300 ${
+                  hasInCart ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-2 opacity-0'
+                }`}
+                aria-label={`${product.name} quantity in cart`}
+              >
+                <button
+                  type="button"
+                  aria-label="Decrease quantity"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    updateQuantity(product.id, cartQuantity - 1);
+                  }}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-black/10 text-lg font-black transition-colors hover:bg-black/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/30"
+                >
+                  -
+                </button>
+                <span className="min-w-[2.25rem] text-center text-sm font-black tabular-nums">{cartQuantity}</span>
+                <button
+                  type="button"
+                  aria-label="Increase quantity"
+                  disabled={!canIncrease}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    updateQuantity(product.id, cartQuantity + 1);
+                  }}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-black/10 text-lg font-black transition-colors hover:bg-black/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {addedMessage ? <p className="text-xs font-semibold text-emerald-300">{addedMessage}</p> : null}
+
+
+
+        {canShowPackageSizes && product.useCase ? <p className="line-clamp-1 text-xs text-gray-500">Use case: {product.useCase}</p> : null}
       </div>
     </div>
   );

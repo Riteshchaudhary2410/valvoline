@@ -45,6 +45,7 @@ export interface Product {
   serviceIntervalKm?: number;
   stock: number;
   sku: string;
+  packageGroup?: string;
   featured: boolean;
   active: boolean;
   createdAt: Date;

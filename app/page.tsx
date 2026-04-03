@@ -188,7 +188,7 @@ export default function Home() {
                     Move from broad category browsing into a confident recommendation in three steps.
                   </h2>
                   <p className="max-w-2xl text-base leading-7 text-slate-600">
-                    This keeps the homepage visually familiar for shoppers while adding a stronger decision path for service advisors, workshop owners, and direct buyers.
+                    Familiar on the surface. Smarter where it matters.
                   </p>
                 </div>
 
@@ -241,7 +241,7 @@ export default function Home() {
                           <p className="text-xs font-bold uppercase tracking-[0.24em] text-slate-300">{tier.range}</p>
                           <p className="mt-2 text-xl font-black">{tier.title}</p>
                         </div>
-                        <span className="rounded-full bg-[#df3b2f] px-3 py-1 text-xs font-black uppercase tracking-[0.2em] text-white">
+                        <span className="rounded-full bg-[#b42318] px-3 py-1 text-xs font-black uppercase tracking-[0.2em] text-white">
                           {tier.discount}
                         </span>
                       </div>

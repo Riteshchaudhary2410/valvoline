@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ProductDetailClient from '@/components/ProductDetailClient';
-import { getProductBySlug, getProducts } from '@/lib/catalog';
+import { getBaseSku, getProductBySlug, getProducts } from '@/lib/catalog';
 
 type PageProps = {
   params: { slug: string };
@@ -43,8 +43,16 @@ export default function ProductDetailPage({ params }: PageProps) {
   }
 
   const currentProduct = product!;
+  const currentBaseSku = getBaseSku(currentProduct.sku);
+  const currentPackageGroup = currentProduct.packageGroup;
   const relatedProducts = getProducts()
-    .filter((item) => item.slug !== currentProduct.slug && item.type === currentProduct.type)
+    .filter(
+      (item) =>
+        item.slug !== currentProduct.slug &&
+        item.type === currentProduct.type &&
+        (!currentPackageGroup || item.packageGroup !== currentPackageGroup) &&
+        !(item.name === currentProduct.name && getBaseSku(item.sku) === currentBaseSku),
+    )
     .slice(0, 3);
   const serializeProduct = (item: typeof currentProduct) => {
     const { createdAt, updatedAt, ...serializable } = item;

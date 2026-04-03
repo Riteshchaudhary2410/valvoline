@@ -1,6 +1,7 @@
 {
-  "/products/page": "app/products/page.js",
-  "/_not-found/page": "app/_not-found/page.js",
   "/page": "app/page.js",
+  "/vehicle-selector/page": "app/vehicle-selector/page.js",
+  "/b2b/page": "app/b2b/page.js",
+  "/products/page": "app/products/page.js",
   "/products/[slug]/page": "app/products/[slug]/page.js"
 }

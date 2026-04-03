@@ -3,10 +3,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { FiArrowLeft, FiCheck, FiHeart, FiShoppingCart, FiStar, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { Product } from '@/types';
 import { formatPrice } from '@/lib/utils';
 import { useCart } from '@/hooks/store';
+import { formatPackSize, getPackageVariants } from '@/lib/catalog';
 
 type ProductView = Omit<Product, 'createdAt' | 'updatedAt'>;
 
@@ -16,11 +18,10 @@ interface ProductDetailClientProps {
 }
 
 export default function ProductDetailClient({ product, relatedProducts }: ProductDetailClientProps) {
-  const [quantity, setQuantity] = useState(1);
   const [mainImage, setMainImage] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [addedToCart, setAddedToCart] = useState(false);
-  const { addItem } = useCart();
+  const { items, addItem, updateQuantity } = useCart();
+  const router = useRouter();
 
   const gallery = useMemo(() => [product.image, ...(product.images || [])].filter(Boolean), [product]);
   const canScrollImages = gallery.length > 1;
@@ -29,6 +30,13 @@ export default function ProductDetailClient({ product, relatedProducts }: Produc
   const bulkDiscount = product.bulkPrice
     ? Math.round(((product.price - product.bulkPrice) / product.price) * 100)
     : 0;
+  const packageVariants = useMemo(() => getPackageVariants(product), [product.name, product.sku, product.packageGroup]);
+  const cartQuantity = useMemo(
+    () => items.find((item) => item.product.id === product.id)?.quantity ?? 0,
+    [items, product.id],
+  );
+  const hasInCart = cartQuantity > 0;
+  const canIncrease = cartQuantity < product.stock;
 
   useEffect(() => {
     setMainImage(0);
@@ -36,9 +44,8 @@ export default function ProductDetailClient({ product, relatedProducts }: Produc
   }, [product.slug]);
 
   const handleAddToCart = () => {
-    addItem(product as Product, quantity);
-    setAddedToCart(true);
-    window.setTimeout(() => setAddedToCart(false), 1600);
+    if (product.stock === 0) return;
+    addItem(product as Product, 1);
   };
 
   const scrollToIndex = (index: number) => {
@@ -145,21 +152,23 @@ export default function ProductDetailClient({ product, relatedProducts }: Produc
               ) : null}
             </div>
 
-            <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-4 md:overflow-visible md:pb-0">
+            <div className="flex max-w-full gap-3 overflow-x-auto pb-1 pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-4 md:overflow-visible md:pb-0">
               {gallery.map((image, index) => (
                 <button
-                  key={image}
+                  key={`${image}-${index}`}
+                  type="button"
                   onClick={() => scrollToIndex(index)}
-                  className={`overflow-hidden rounded-2xl border-2 transition-all ${
-                    index === mainImage ? 'border-primary-accent' : 'border-white/10'
-                  } shrink-0 md:shrink`}
+                  aria-label={`View image ${index + 1}`}
+                  className={`h-20 w-20 shrink-0 overflow-hidden rounded-2xl border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#120605] md:h-auto md:w-full md:shrink md:aspect-square ${
+                    index === mainImage ? 'border-primary-accent' : 'border-white/10 hover:border-primary-accent/40'
+                  }`}
                 >
                   <Image
                     src={image}
                     alt={`${product.name} ${index + 1}`}
-                    width={220}
-                    height={220}
-                    className="h-full w-full object-contain p-3"
+                    width={72}
+                    height={72}
+                    className="h-full w-full object-contain p-2 md:p-3"
                   />
                 </button>
               ))}
@@ -196,26 +205,51 @@ export default function ProductDetailClient({ product, relatedProducts }: Produc
 
               <p className="max-w-3xl text-gray-300">{product.longDescription || product.description}</p>
 
-              <div className="grid gap-3 md:grid-cols-3">
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <p className="text-xs uppercase tracking-[0.22em] text-gray-500">Viscosity</p>
-                  <p className="mt-2 text-lg font-semibold">{product.viscosity || 'N/A'}</p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <p className="text-xs uppercase tracking-[0.22em] text-gray-500">Pack size</p>
-                  <p className="mt-2 text-lg font-semibold">
-                    {product.quantity} {product.quantityUnit}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <p className="text-xs uppercase tracking-[0.22em] text-gray-500">SKU</p>
-                  <p className="mt-2 text-lg font-semibold">{product.sku}</p>
-                </div>
+              <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+                <p className="text-sm font-semibold text-gray-200">
+                  Size: <span className="font-black text-white">{formatPackSize(product)}</span>{' '}
+                  <span className="text-gray-400">(Pack of 1)</span>
+                </p>
+
+                {packageVariants.length > 1 ? (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    {packageVariants.map((variant) => {
+                      const isSelected = variant.slug === product.slug;
+                      const isInStock = variant.stock > 0;
+                      return (
+                        <button
+                          key={variant.slug}
+                          aria-label={`${variant.name} ${formatPackSize(variant)} (Pack of 1)`}
+                          aria-current={isSelected ? 'page' : undefined}
+                          type="button"
+                          disabled={isSelected}
+                          onClick={() => {
+                            if (isSelected) return;
+                            router.push(`/products/${variant.slug}`);
+                          }}
+                          className={`rounded-2xl border bg-white p-4 text-slate-900 shadow-[0_12px_30px_rgba(0,0,0,0.18)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d5db8]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#120605] ${
+                            isSelected
+                              ? 'cursor-default border-[#1d5db8] ring-2 ring-[#1d5db8]/30'
+                              : 'border-slate-300 hover:border-slate-400'
+                          }`}
+                        >
+                          <p className="text-base font-black leading-snug">
+                            {formatPackSize(variant)} <span className="font-semibold text-slate-700">(Pack of 1)</span>
+                          </p>
+                          <p className="mt-2 text-lg font-black">{formatPrice(variant.bulkPrice || variant.price)}</p>
+                          <p className={`mt-1 text-sm font-semibold ${isInStock ? 'text-emerald-700' : 'text-rose-700'}`}>
+                            {isInStock ? 'In stock' : 'Out of stock'}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
               </div>
 
               <div className="rounded-3xl border border-primary-accent/20 bg-primary-accent/10 p-5">
-                <div className="flex flex-wrap items-end justify-between gap-4">
-                  <div>
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div className="min-w-0">
                     <p className="text-sm uppercase tracking-[0.24em] text-primary-accent">Price</p>
                     <div className="mt-2 flex items-center gap-3">
                       <span className="text-4xl font-bold text-white">{formatPrice(finalPrice)}</span>
@@ -224,9 +258,56 @@ export default function ProductDetailClient({ product, relatedProducts }: Produc
                     {product.bulkPrice && <p className="mt-2 text-sm text-emerald-300">Save {bulkDiscount}% on bulk-friendly pricing</p>}
                   </div>
 
-                  <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-right">
-                    <p className="text-xs uppercase tracking-[0.22em] text-gray-500">Stock</p>
-                    <p className="mt-2 font-semibold text-emerald-300">{product.stock} units ready</p>
+                  <div className="flex flex-wrap items-center justify-between gap-3 md:justify-end">
+                    <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-right">
+                      <p className="text-xs uppercase tracking-[0.22em] text-gray-500">Stock</p>
+                      <p className="mt-2 font-semibold text-emerald-300">{product.stock} units ready</p>
+                    </div>
+
+                    <div
+                      className={`relative h-12 overflow-hidden rounded-2xl bg-primary-accent text-[#1b0c04] shadow-[0_16px_44px_rgba(246,139,44,0.24)] transition-[width] duration-300 ease-out focus-within:ring-2 focus-within:ring-primary-accent/60 focus-within:ring-offset-2 focus-within:ring-offset-[#120605] ${
+                        hasInCart ? 'w-52' : 'w-40'
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={handleAddToCart}
+                        disabled={product.stock === 0}
+                        aria-label={`Add ${product.name} to cart`}
+                        className={`absolute inset-0 flex h-12 w-full items-center justify-center gap-2 px-4 text-base font-black transition-all duration-300 ${
+                          hasInCart ? 'pointer-events-none -translate-x-6 opacity-0' : 'translate-x-0 opacity-100'
+                        } disabled:cursor-not-allowed disabled:opacity-60`}
+                      >
+                        <FiShoppingCart size={18} />
+                        Add to cart
+                      </button>
+
+                      <div
+                        className={`absolute inset-0 flex h-12 w-full items-center justify-between px-3 transition-all duration-300 ${
+                          hasInCart ? 'translate-x-0 opacity-100' : 'pointer-events-none translate-x-6 opacity-0'
+                        }`}
+                        aria-label={`${product.name} quantity in cart`}
+                      >
+                        <button
+                          type="button"
+                          aria-label="Decrease quantity"
+                          onClick={() => updateQuantity(product.id, cartQuantity - 1)}
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-black/10 text-xl font-black transition-colors hover:bg-black/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/30"
+                        >
+                          -
+                        </button>
+                        <span className="min-w-[3rem] text-center text-base font-black tabular-nums">{cartQuantity}</span>
+                        <button
+                          type="button"
+                          aria-label="Increase quantity"
+                          disabled={!canIncrease}
+                          onClick={() => updateQuantity(product.id, cartQuantity + 1)}
+                          className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-black/10 text-xl font-black transition-colors hover:bg-black/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -273,10 +354,21 @@ export default function ProductDetailClient({ product, relatedProducts }: Produc
               </div>
             </div>
 
-            <div className="grid gap-4 rounded-[2rem] border border-white/10 bg-white/5 p-6 md:grid-cols-2">
-              <div className="space-y-4">
+              <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
                 <h2 className="text-2xl font-bold">Specifications</h2>
-                <div className="space-y-2">
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-gray-200">
+                    <FiCheck className="text-primary-accent" />
+                    <span>
+                      Viscosity: <span className="font-semibold text-white">{product.viscosity || 'N/A'}</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-gray-200">
+                    <FiCheck className="text-primary-accent" />
+                    <span className="min-w-0 break-words">
+                      SKU: <span className="font-semibold text-white">{product.sku}</span>
+                    </span>
+                  </div>
                   {(product.specifications || []).map((spec) => (
                     <div key={spec} className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-gray-200">
                       <FiCheck className="text-primary-accent" />
@@ -285,41 +377,6 @@ export default function ProductDetailClient({ product, relatedProducts }: Produc
                   ))}
                 </div>
               </div>
-
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold">Order quantity</h2>
-                <div className="flex gap-3">
-                  <div className="flex flex-1 items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
-                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-gray-400 transition-colors hover:text-primary-accent">
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      min="1"
-                      max={product.stock}
-                      value={quantity}
-                      onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
-                      className="w-16 bg-transparent text-center font-semibold text-white focus:outline-none"
-                    />
-                    <button onClick={() => setQuantity(Math.min(product.stock, quantity + 1))} className="text-gray-400 transition-colors hover:text-primary-accent">
-                      +
-                    </button>
-                  </div>
-
-                  <button
-                    onClick={handleAddToCart}
-                    disabled={product.stock === 0}
-                    className={`btn ${addedToCart ? 'btn-secondary' : 'btn-primary'} rounded-2xl px-5 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-50`}
-                  >
-                    <FiShoppingCart size={18} />
-                    {addedToCart ? 'Added' : 'Add to cart'}
-                  </button>
-                </div>
-                <p className="text-sm text-gray-400">
-                  Perfect for retail customers and workshop reorders. Checkout is currently a placeholder flow so you can keep browsing while payments are wired up.
-                </p>
-              </div>
-            </div>
 
             <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
               <div className="flex items-center justify-between gap-4">

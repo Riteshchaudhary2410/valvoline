@@ -132,8 +132,11 @@ export default function ProductFilters({ onMobileClose }: ProductFiltersProps) {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <label className="block text-sm font-semibold text-gray-300">Min Price</label>
+          <label htmlFor="filter-min-price" className="block text-sm font-semibold text-gray-300">
+            Min Price
+          </label>
           <input
+            id="filter-min-price"
             type="number"
             placeholder="0"
             min="0"
@@ -143,8 +146,11 @@ export default function ProductFilters({ onMobileClose }: ProductFiltersProps) {
           />
         </div>
         <div className="space-y-2">
-          <label className="block text-sm font-semibold text-gray-300">Max Price</label>
+          <label htmlFor="filter-max-price" className="block text-sm font-semibold text-gray-300">
+            Max Price
+          </label>
           <input
+            id="filter-max-price"
             type="number"
             placeholder="10000"
             min="0"

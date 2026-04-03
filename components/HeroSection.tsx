@@ -27,7 +27,7 @@ export default function HeroSection() {
         <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div className="space-y-8">
             <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.15)] bg-[rgba(255,255,255,0.08)] px-4 py-2 text-sm text-white/90 backdrop-blur">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#df3b2f]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-[#b42318]" />
               Serving Sagarmatha Zone's garages since 2010 • Trusted by 500+ mechanics
             </div>
 
@@ -43,7 +43,7 @@ export default function HeroSection() {
             <div className="flex flex-col gap-4 sm:flex-row">
               <Link
                 href="/vehicle-selector"
-                className="btn rounded-full border border-[#df3b2f] bg-[#df3b2f] px-6 py-3 text-base font-semibold text-white shadow-[0_18px_42px_rgba(223,59,47,0.3)] hover:-translate-y-1 hover:bg-[#ef4d41]"
+                className="btn rounded-full border border-[#b42318] bg-[#b42318] px-6 py-3 text-base font-semibold text-white shadow-[0_18px_42px_rgba(180,35,24,0.3)] hover:-translate-y-1 hover:bg-[#c02626]"
               >
                 Find your oil now
                 <FiArrowRight size={18} />
@@ -162,7 +162,7 @@ export default function HeroSection() {
                           </div>
                           
                           <div className="flex items-start gap-2 rounded-lg p-2 transition-all duration-200 hover:bg-[rgba(223,59,47,0.08)] hover:translate-x-1">
-                            <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#df3b2f] text-xs font-bold text-white transform transition-transform duration-200 hover:scale-110">✓</span>
+                            <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#b42318] text-xs font-bold text-white transform transition-transform duration-200 hover:scale-110">✓</span>
                             <div>
                               <p className="text-xs font-semibold text-[#0f2140]">Long Engine Life</p>
                               <p className="text-xs text-slate-600">Advanced protection</p>
@@ -197,7 +197,7 @@ export default function HeroSection() {
                           </div>
                           <span
                             className="mt-1 h-3 w-14 rounded-full shrink-0"
-                            style={{ background: index === 1 ? '#1d5db8' : '#df3b2f' }}
+                            style={{ background: index === 1 ? '#1d5db8' : '#b42318' }}
                           />
                         </div>
                         <p className="text-sm leading-6 text-slate-600">{card.description}</p>
