@@ -66,5 +66,9 @@ export const calculateShipping = (total: number): number => {
 };
 
 export const clsx = (...classes: (string | undefined | null | boolean)[]): string => {
+
+  
   return classes.filter(Boolean).join(' ');
 };
+
+
