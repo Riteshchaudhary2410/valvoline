@@ -22,3 +22,8 @@ yarn-error.log
 .turbo/
 coverage/
 .env.production.local
+.next-dev
+.next
+.TODO.md.*
+.TODO.md
+.TODO-MobileImages.md
