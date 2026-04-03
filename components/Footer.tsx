@@ -23,7 +23,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-slate-800 bg-[linear-gradient(180deg,#081224_0%,#0f2140_100%)]">
+    <footer className="border-t border-white/10 bg-gradient-to-b from-[#2B0A05] to-[#120403] shadow-[0_-10px_40px_rgba(249,115,22,0.08)] text-gray-200">
       <div className="container-max py-14">
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4 col-span-2 sm:col-span-2 lg:col-span-1">

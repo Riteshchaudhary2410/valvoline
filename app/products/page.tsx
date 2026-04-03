@@ -114,7 +114,7 @@ export default function ProductsPage() {
                 </div>
 
                 {sortedProducts.length > 0 ? (
-                  <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                  <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
                     {sortedProducts.map((product) => (
                       <ProductCard key={product.slug} product={product} showPackageSizes />
                     ))}

@@ -256,13 +256,8 @@ export default function ProductCard({ product, showPackageSizes = false }: Produ
         className="flex flex-1 cursor-pointer flex-col gap-4 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black/30"
         aria-label={`View details for ${product.name}`}
       >
-        <p className="line-clamp-2 text-[13px] leading-6 text-gray-300">{product.description}</p>
-        <div className="flex items-center gap-1 text-sm text-amber-300">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <FiStar key={i} size={14} fill="currentColor" />
-          ))}
-          <span className="ml-1 text-gray-500">(garage-trusted)</span>
-        </div>
+       
+        
 
         <div className="flex flex-wrap gap-2">
           {product.vehicleTypes?.map((type) => (
@@ -270,6 +265,13 @@ export default function ProductCard({ product, showPackageSizes = false }: Produ
               {type}
             </span>
           ))}
+        </div>
+        
+        <div className="flex items-center gap-1 text-sm text-amber-300">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <FiStar key={i} size={14} fill="currentColor" />
+          ))}
+          <span className="ml-1 text-gray-500">(garage-trusted)</span>
         </div>
 
         {canShowPackageSizes ? (
@@ -401,7 +403,7 @@ export default function ProductCard({ product, showPackageSizes = false }: Produ
 
 
 
-        {canShowPackageSizes && product.useCase ? <p className="line-clamp-1 text-xs text-gray-500">Use case: {product.useCase}</p> : null}
+        
       </div>
     </div>
   );
