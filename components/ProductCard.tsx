@@ -346,7 +346,7 @@ export default function ProductCard({ product, showPackageSizes = false }: Produ
           <div className="rounded-3xl border border-white/10 bg-black/15 p-2 flex flex-col h-full justify-center">
             <div
               className={`relative h-12 overflow-hidden rounded-2xl bg-primary-accent text-[#1b0c04] shadow-[0_16px_38px_rgba(246,139,44,0.24)] transition-[width] duration-300 ease-out focus-within:ring-2 focus-within:ring-primary-accent/60 focus-within:ring-offset-2 focus-within:ring-offset-black/30 ${
-                hasInCart ? 'w-24' : 'w-24'
+                hasInCart ? 'w-32' : 'w-24'
               }`}
             >
               <button

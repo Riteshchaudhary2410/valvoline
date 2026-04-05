@@ -173,27 +173,140 @@ export default function ProductDetailClient({ product, relatedProducts }: Produc
                 </button>
               ))}
             </div>
+         //==<div className="flex items-stretch  gap-3">
+                   <div className="min-w-0 flex-1 rounded-3xl border border-primary-accent/15 bg-primary-accent/10 px-4 py-2">
+                     <div className="flex items-center justify-between gap-2">
+                       <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary-accent">Price</p>
+                       <p className="min-w-0 truncate text-[10px] font-semibold text-gray-400">
+                         {product.bulkPrice ? `Save ${bulkDiscount}% • ${product.stock} in stock` : `${product.stock} in stock`}
+                       </p>
+                     </div>
+                     <div className="mt-1 flex flex-wrap items-baseline gap-2">
+                       <span className="text-lg font-black text-white">{formatPrice(finalPrice)}</span>
+                       {product.bulkPrice ? (
+                         <span className="text-xs font-semibold text-gray-500 line-through">{formatPrice(product.price)}</span>
+                       ) : null}
+                       <p>{product.bulkPrice && <p className="mt-2 text-sm text-emerald-300">Save {bulkDiscount}% on bulk-friendly pricing</p>}</p>
+                     </div>
+                   </div>
+                   
+         
+                   <div className="rounded-3xl border border-white/10 bg-black/15 p-2 flex flex-col h-full justify-center">
+                     <div
+                       className={`relative h-12 overflow-hidden rounded-2xl bg-primary-accent text-[#1b0c04] shadow-[0_16px_38px_rgba(246,139,44,0.24)] transition-[width] duration-300 ease-out focus-within:ring-2 focus-within:ring-primary-accent/60 focus-within:ring-offset-2 focus-within:ring-offset-black/30 ${
+                         hasInCart ? 'w-32' : 'w-24'
+                       }`}
+                     >
+                       <button
+                         type="button"
+                         onClick={handleAddToCart}
+                         disabled={product.stock === 0}
+                         className={`absolute inset-0 flex h-11 w-full items-center justify-center gap-2 px-3 text-sm font-black transition-all duration-300 ${
+                           hasInCart ? 'pointer-events-none translate-y-2 opacity-0' : 'translate-y-0 opacity-100'
+                         } disabled:cursor-not-allowed disabled:opacity-60`}
+                         aria-label={`Add ${product.name} to cart`}
+                       >
+                         <FiShoppingCart size={16} />
+                         Add
+                       </button>
+         
+                       <div
+                         className={`absolute inset-0 flex h-11 w-full items-center justify-between px-2 transition-all duration-300 ${
+                           hasInCart ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-2 opacity-0'
+                         }`}
+                         aria-label={`${product.name} quantity in cart`}
+                       >
+                         <button
+                           type="button"
+                           aria-label="Decrease quantity"
+                           onClick={(event) => {
+                             event.preventDefault();
+                             event.stopPropagation();
+                             updateQuantity(product.id, cartQuantity - 1);
+                           }}
+                           className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-black/10 text-lg font-black transition-colors hover:bg-black/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/30"
+                         >
+                           -
+                         </button>
+                         <span className="min-w-[2.25rem] text-center text-sm font-black tabular-nums">{cartQuantity}</span>
+                         <button
+                           type="button"
+                           aria-label="Increase quantity"
+                           disabled={!canIncrease}
+                           onClick={(event) => {
+                             event.preventDefault();
+                             event.stopPropagation();
+                             updateQuantity(product.id, cartQuantity + 1);
+                           }}
+                           className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-black/10 text-lg font-black transition-colors hover:bg-black/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-not-allowed disabled:opacity-50"
+                         >
+                           +
+                         </button>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+             ====
+                       <div className="rounded-2xl border border-white/10 bg-black/15 p-3">
+                         <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-gray-500">
+                           Pack size <span className="font-semibold tracking-normal text-gray-500">(Pack of 1)</span>
+                         </p>
+                         <div className="mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                           {packageVariants.map((variant) => {
+                             const isSelected = variant.slug === product.slug;
+                             return (
+                               <button
+                                 key={variant.slug}
+                                 type="button"
+                                 aria-label={`${variant.name} ${formatPackSize(variant)} (Pack of 1)`}
+                                 aria-current={isSelected ? 'page' : undefined}
+                                 disabled={isSelected}
+                                 onClick={(event) => {
+                                   event.stopPropagation();
+                                   if (isSelected) return;
+                                   router.push(`/products/${variant.slug}`);
+                                 }}
+                                 className={`min-w-[7.25rem] rounded-2xl border bg-black/20 px-3 py-2 text-left text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-black/30 ${
+                                   isSelected
+                                     ? 'cursor-default border-[#1d5db8] ring-2 ring-[#1d5db8]/25'
+                                     : 'border-white/10 hover:border-primary-accent/40'
+                                 }`}
+                               >
+                                 <p className="text-sm font-black leading-snug">{formatPackSize(variant)}</p>
+                                 <p className="mt-1 text-xs font-semibold text-gray-300">{formatPrice(variant.bulkPrice || variant.price)}</p>
+                               </button>
+                             );
+                           })}
+                         </div>
+                       </div>
+                       
+                     
+              
           </div>
+          
 
           <div className="space-y-8">
             <div className="space-y-4 rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur">
-              <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="flex  items-start justify-between gap-4">
                 <div className="space-y-3">
                   <div className="flex flex-wrap gap-2">
                     <span className="badge badge-primary">{product.type.replace(/_/g, ' ')}</span>
                     {product.featured && <span className="badge badge-secondary">Featured</span>}
                     {product.bulkPrice && <span className="badge badge-success">Bulk price</span>}
+          
                   </div>
                   <p className="text-sm uppercase tracking-[0.24em] text-gray-500">{product.brand}</p>
                   <h1 className="text-3xl font-bold md:text-5xl">{product.name}</h1>
-                </div>
 
+                </div>
                 <button
-                  onClick={() => setIsWishlisted((prev) => !prev)}
-                  className="rounded-full border border-white/10 bg-white/5 p-3 text-gray-200 transition-colors hover:border-primary-accent hover:text-primary-accent"
-                >
-                  <FiHeart size={20} fill={isWishlisted ? 'currentColor' : 'none'} />
-                </button>
+    onClick={() => setIsWishlisted((prev) => !prev)}
+    className="mt-1 shrink-0 rounded-full border border-white/10 bg-white/5 p-3 text-gray-200 transition-all duration-300 hover:border-orange-400 hover:text-orange-400 hover:-translate-y-1"
+  >
+    <FiHeart size={20} fill={isWishlisted ? 'currentColor' : 'none'} />
+  </button>
+                
+               
               </div>
 
               <div className="flex items-center gap-2 text-amber-300">
@@ -204,48 +317,6 @@ export default function ProductDetailClient({ product, relatedProducts }: Produc
               </div>
 
               <p className="max-w-3xl text-gray-300">{product.longDescription || product.description}</p>
-
-              <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
-                <p className="text-sm font-semibold text-gray-200">
-                  Size: <span className="font-black text-white">{formatPackSize(product)}</span>{' '}
-                  <span className="text-gray-400">(Pack of 1)</span>
-                </p>
-
-                {packageVariants.length > 1 ? (
-                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                    {packageVariants.map((variant) => {
-                      const isSelected = variant.slug === product.slug;
-                      const isInStock = variant.stock > 0;
-                      return (
-                        <button
-                          key={variant.slug}
-                          aria-label={`${variant.name} ${formatPackSize(variant)} (Pack of 1)`}
-                          aria-current={isSelected ? 'page' : undefined}
-                          type="button"
-                          disabled={isSelected}
-                          onClick={() => {
-                            if (isSelected) return;
-                            router.push(`/products/${variant.slug}`);
-                          }}
-                          className={`rounded-2xl border bg-white p-4 text-slate-900 shadow-[0_12px_30px_rgba(0,0,0,0.18)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d5db8]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#120605] ${
-                            isSelected
-                              ? 'cursor-default border-[#1d5db8] ring-2 ring-[#1d5db8]/30'
-                              : 'border-slate-300 hover:border-slate-400'
-                          }`}
-                        >
-                          <p className="text-base font-black leading-snug">
-                            {formatPackSize(variant)} <span className="font-semibold text-slate-700">(Pack of 1)</span>
-                          </p>
-                          <p className="mt-2 text-lg font-black">{formatPrice(variant.bulkPrice || variant.price)}</p>
-                          <p className={`mt-1 text-sm font-semibold ${isInStock ? 'text-emerald-700' : 'text-rose-700'}`}>
-                            {isInStock ? 'In stock' : 'Out of stock'}
-                          </p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : null}
-              </div>
 
               <div className="rounded-3xl border border-primary-accent/20 bg-primary-accent/10 p-5">
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -311,6 +382,10 @@ export default function ProductDetailClient({ product, relatedProducts }: Produc
                   </div>
                 </div>
               </div>
+
+              
+
+              
             </div>
 
             <div className="grid gap-4 rounded-[2rem] border border-white/10 bg-white/5 p-6 md:grid-cols-[1fr_0.9fr]">
