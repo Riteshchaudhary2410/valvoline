@@ -1,52 +1,111 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { filterProducts } from '@/lib/catalog';
+import { ApiError } from '@/lib/http-error';
+import { getRouteErrorResponse } from '@/lib/route-errors';
+import { requireAdmin } from '@/lib/admin-auth';
+import { parseBooleanQuery, parseProductTypeQuery, readJsonBody, readOptionalJsonBody } from '@/lib/request-utils';
+import { createProduct, deleteProduct, listProducts, updateProduct } from '@/lib/product-service';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-
-    const filtered = filterProducts({
-      oilType: searchParams.get('oilType') || searchParams.get('type') || undefined,
-      viscosity: searchParams.get('viscosity') || undefined,
-      vehicleType: searchParams.get('vehicleType') || undefined,
-      brand: searchParams.get('brand') || undefined,
-      search: searchParams.get('search') || undefined,
-      minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
-      maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
+    const params = request.nextUrl.searchParams;
+    const products = await listProducts({
+      search: params.get('search') || undefined,
+      slug: params.get('slug')?.trim().toLowerCase() || undefined,
+      packageGroup: params.get('packageGroup') || undefined,
+      type: parseProductTypeQuery(params.get('type') || params.get('oilType')),
+      vehicleType: params.get('vehicleType') || undefined,
+      brand: params.get('brand') || undefined,
+      viscosity: params.get('viscosity') || undefined,
+      minPrice: params.get('minPrice') ? Number(params.get('minPrice')) : undefined,
+      maxPrice: params.get('maxPrice') ? Number(params.get('maxPrice')) : undefined,
+      active: parseBooleanQuery(params.get('active')),
     });
 
     return NextResponse.json({
       success: true,
-      data: filtered,
+      data: products,
+      count: products.length,
     });
   } catch (error) {
-    console.error('Error fetching products:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch products' },
-      { status: 500 }
-    );
+    const response = getRouteErrorResponse(error);
+    return NextResponse.json(response.body, { status: response.status });
   }
 }
 
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    requireAdmin(request);
+    const body = await readJsonBody<unknown>(request);
+    const product = await createProduct(body);
 
     return NextResponse.json(
       {
         success: true,
-        data: {
-          ...body,
-          id: body.slug || `product-${Date.now()}`,
-        },
+        data: product,
       },
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error creating product:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to create product' },
-      { status: 500 }
-    );
+    const response = getRouteErrorResponse(error);
+    return NextResponse.json(response.body, { status: response.status });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    requireAdmin(request);
+
+    const body = (await readOptionalJsonBody<Record<string, unknown>>(request)) ?? {};
+    const identifier = String(body.id ?? body.slug ?? body.identifier ?? '').trim();
+
+    if (!identifier) {
+      throw new ApiError('Product identifier is required', 400);
+    }
+
+    const { id, slug, identifier: _identifier, ...updates } = body;
+    const product = await updateProduct(identifier, updates);
+
+    return NextResponse.json({
+      success: true,
+      data: product,
+    });
+  } catch (error) {
+    const response = getRouteErrorResponse(error);
+    return NextResponse.json(response.body, { status: response.status });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    requireAdmin(request);
+
+    const params = request.nextUrl.searchParams;
+    const body = (await readOptionalJsonBody<Record<string, unknown>>(request)) ?? {};
+    const identifier = String(
+      params.get('id') ??
+        params.get('slug') ??
+        body.id ??
+        body.slug ??
+        body.identifier ??
+        ''
+    ).trim();
+
+    if (!identifier) {
+      throw new ApiError('Product identifier is required', 400);
+    }
+
+    const result = await deleteProduct(identifier);
+
+    return NextResponse.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    const response = getRouteErrorResponse(error);
+    return NextResponse.json(response.body, { status: response.status });
   }
 }

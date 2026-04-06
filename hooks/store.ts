@@ -158,6 +158,8 @@ export const useVehicleSelector = create<VehicleStore>()(
   )
 );
 
+type FilterKey = 'vehicleType' | 'oilType' | 'viscosity' | 'brand' | 'minPrice' | 'maxPrice' | 'search';
+
 interface FilterStore {
   filters: {
     vehicleType?: string;
@@ -168,14 +170,14 @@ interface FilterStore {
     maxPrice?: number;
     search?: string;
   };
-  setFilter: (key: string, value: any) => void;
+  setFilter: <K extends FilterKey>(key: K, value: FilterStore['filters'][K]) => void;
   resetFilters: () => void;
 }
 
 export const useFilters = create<FilterStore>()((set) => ({
   filters: {},
 
-  setFilter: (key: string, value: any) =>
+  setFilter: <K extends FilterKey>(key: K, value: FilterStore['filters'][K]) =>
     set((state) => ({
       filters: { ...state.filters, [key]: value },
     })),

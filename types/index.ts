@@ -18,7 +18,7 @@ export interface User {
   updatedAt: Date;
 }
 
-export type ProductType = 'ENGINE_OIL' | 'GEAR_OIL' | 'HYDRAULIC_OIL' | 'GREASE' | 'INDUSTRIAL_OILS';
+export type ProductType = 'ENGINE_OIL' | 'GEAR_OIL' | 'HYDRAULIC_OIL' | 'GREASE' | 'INDUSTRIAL_OILS'| 'BRAKE_OIL';
 
 export interface Product {
   id: string;

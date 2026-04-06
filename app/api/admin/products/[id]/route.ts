@@ -1,28 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRouteErrorResponse } from '@/lib/route-errors';
 import { requireAdmin } from '@/lib/admin-auth';
-import { deleteProduct, getProduct, updateProduct } from '@/lib/product-service';
+import { deleteProduct, updateProduct } from '@/lib/product-service';
 import { readOptionalJsonBody } from '@/lib/request-utils';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const product = await getProduct(params.id);
-
-    return NextResponse.json({
-      success: true,
-      data: product,
-    });
-  } catch (error) {
-    const response = getRouteErrorResponse(error);
-    return NextResponse.json(response.body, { status: response.status });
-  }
-}
 
 export async function PUT(
   request: NextRequest,
@@ -30,7 +13,6 @@ export async function PUT(
 ) {
   try {
     requireAdmin(request);
-
     const body = await readOptionalJsonBody<unknown>(request);
     const product = await updateProduct(params.id, body ?? {});
 

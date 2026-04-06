@@ -359,7 +359,7 @@ export default function ProductCard({ product, showPackageSizes = false }: Produ
                 aria-label={`Add ${product.name} to cart`}
               >
                 <FiShoppingCart size={16} />
-                Add
+                Add to Cart
               </button>
 
               <div

@@ -6,14 +6,29 @@ import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import ProductFilters from '@/components/ProductFilters';
 import { useFilters } from '@/hooks/store';
-import { filterProducts, PRODUCT_CATALOG } from '@/lib/catalog';
+import { filterProducts } from '@/lib/catalog';
 import { useSearchParams } from 'next/navigation';
 import { FiSliders, FiSearch } from 'react-icons/fi';
+import type { Product } from '@/types';
+
+type ApiProduct = Omit<Product, 'createdAt' | 'updatedAt'> & {
+  createdAt: string;
+  updatedAt: string;
+};
+
+const normalizeProduct = (product: ApiProduct): Product => ({
+  ...product,
+  createdAt: new Date(product.createdAt),
+  updatedAt: new Date(product.updatedAt),
+});
 
 export default function ProductsPage() {
   const searchParams = useSearchParams();
   const { filters, setFilter, resetFilters } = useFilters();
   const [sortBy, setSortBy] = useState<'featured' | 'price-low' | 'price-high' | 'newest'>('featured');
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     resetFilters();
@@ -35,10 +50,48 @@ export default function ProductsPage() {
     if (maxPrice) setFilter('maxPrice', Number(maxPrice));
   }, [searchParams, resetFilters, setFilter]);
 
-  const sortedProducts = useMemo(() => {
-    const products = filterProducts(filters);
+  useEffect(() => {
+    const controller = new AbortController();
 
-    const sorted = [...products];
+    const loadProducts = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch('/api/products', {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load products');
+        }
+
+        const payload = (await response.json()) as { success: boolean; data?: ApiProduct[]; error?: string };
+
+        if (!payload.success || !payload.data) {
+          throw new Error(payload.error || 'Failed to load products');
+        }
+
+        setProducts(payload.data.map(normalizeProduct));
+      } catch (loadError) {
+        if ((loadError as Error).name === 'AbortError') return;
+        setError(loadError instanceof Error ? loadError.message : 'Failed to load products');
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadProducts();
+
+    return () => controller.abort();
+  }, []);
+
+  const sortedProducts = useMemo(() => {
+    const filteredProducts = filterProducts(filters, products);
+
+    const sorted = [...filteredProducts];
     switch (sortBy) {
       case 'price-low':
         sorted.sort((a, b) => (a.bulkPrice || a.price) - (b.bulkPrice || b.price));
@@ -55,7 +108,8 @@ export default function ProductsPage() {
         break;
     }
     return sorted;
-  }, [filters, sortBy]);
+  }, [filters, products, sortBy]);
+  
 
   return (
     <>
@@ -87,7 +141,7 @@ export default function ProductsPage() {
                     <div>
                       <p className="text-sm text-gray-400">Results</p>
                       <p className="text-lg font-semibold">
-                        Showing {sortedProducts.length} of {PRODUCT_CATALOG.length}
+                        Showing {sortedProducts.length} of {products.length}
                       </p>
                     </div>
                   </div>
@@ -113,7 +167,32 @@ export default function ProductsPage() {
                   </div>
                 </div>
 
-                {sortedProducts.length > 0 ? (
+                {isLoading ? (
+                  <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <div key={index} className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5">
+                        <div className="skeleton aspect-[4/5] rounded-[1.5rem]" />
+                        <div className="skeleton mt-4 h-5 w-20" />
+                        <div className="skeleton mt-3 h-6 w-3/4" />
+                        <div className="skeleton mt-3 h-4 w-full" />
+                      </div>
+                    ))}
+                  </div>
+                ) : error ? (
+                  <div className="rounded-[1.75rem] border border-red-500/20 bg-red-500/10 px-6 py-16 text-center">
+                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-red-500/10 text-3xl text-red-300">
+                      !
+                    </div>
+                    <h2 className="mt-6 text-2xl font-bold">Unable to load products</h2>
+                    <p className="mt-3 text-gray-400">{error}</p>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="btn btn-primary mt-6 rounded-full px-5 py-3"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                ) : sortedProducts.length > 0 ? (
                   <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
                     {sortedProducts.map((product) => (
                       <ProductCard key={product.slug} product={product} showPackageSizes />

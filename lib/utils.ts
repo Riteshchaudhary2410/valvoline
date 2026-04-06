@@ -61,14 +61,30 @@ export const calculateTax = (amount: number): number => {
 };
 
 export const calculateShipping = (total: number): number => {
-  if (total >= 2000) return 0; // Free shipping above 2000
-  return 199; // Fixed shipping
+  const FREE_SHIPPING_THRESHOLD = 2000;
+  const STANDARD_SHIPPING_COST = 199;
+  return total >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING_COST;
 };
 
-export const clsx = (...classes: (string | undefined | null | boolean)[]): string => {
+/**
+ * Validate and sanitize product quantity for cart operations
+ */
+export const validateQuantity = (quantity: unknown): number => {
+  const parsed = typeof quantity === 'number' ? quantity : Number(quantity);
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    throw new Error('Quantity must be a positive number');
+  }
+  return Math.floor(parsed);
+};
 
-  
-  return classes.filter(Boolean).join(' ');
+/**
+ * Validate product slug format
+ */
+export const validateProductSlug = (slug: unknown): string => {
+  if (typeof slug !== 'string' || !slug.trim()) {
+    throw new Error('Product slug is required and must be a non-empty string');
+  }
+  return slug.trim();
 };
 
 
