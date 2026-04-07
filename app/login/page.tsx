@@ -1,23 +1,27 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/hooks/store';
+import { authenticateAccount } from '@/lib/auth-client';
 import { FiEye, FiEyeOff, FiShield } from 'react-icons/fi';
-import { UserRole } from '@/types';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [accountType, setAccountType] = useState<UserRole>('CUSTOMER');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const { setUser } = useAuth();
+
+  useEffect(() => {
+    setEmail('');
+    setPassword('');
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,14 +35,16 @@ export default function LoginPage() {
 
       await new Promise((resolve) => setTimeout(resolve, 650));
 
-      const inferredRole: UserRole =
-        accountType === 'CUSTOMER' ? 'CUSTOMER' : accountType === 'GARAGE' ? 'GARAGE' : 'MECHANIC';
+      const account = authenticateAccount(email, password);
 
       setUser({
-        id: `user-${Date.now()}`,
-        name: accountType === 'GARAGE' ? 'Garage Manager' : 'Workshop User',
-        email,
-        role: inferredRole,
+        id: account.id,
+        name: account.name,
+        email: account.email,
+        phone: account.phone,
+        role: account.role,
+        company: account.company,
+        gstNumber: account.gstNumber,
       });
 
       router.push('/dashboard');
@@ -80,7 +86,7 @@ export default function LoginPage() {
           <section className="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur md:p-8">
             <div className="mb-6 text-center">
               <h2 className="text-3xl font-bold">Welcome back</h2>
-              <p className="mt-2 text-gray-400">Choose the account mode that matches your buying workflow.</p>
+              <p className="mt-2 text-gray-400">Sign in with the account you created on the signup page.</p>
             </div>
 
             {error && (
@@ -89,35 +95,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            <form onSubmit={handleLogin} className="space-y-5">
-              <div className="grid gap-3 md:grid-cols-3">
-                {[
-                  { value: 'CUSTOMER', label: 'Retail', note: 'Bike or car owner' },
-                  { value: 'MECHANIC', label: 'Mechanic', note: 'Service counter user' },
-                  { value: 'GARAGE', label: 'Garage', note: 'Bulk buyer' },
-                ].map((option) => (
-                  <label
-                    key={option.value}
-                    className={`cursor-pointer rounded-3xl border px-4 py-4 transition-colors ${
-                      accountType === option.value
-                        ? 'border-primary-accent bg-primary-accent/10'
-                        : 'border-white/10 bg-black/20 hover:border-primary-accent/40'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="accountType"
-                      value={option.value}
-                      checked={accountType === option.value}
-                      onChange={() => setAccountType(option.value as UserRole)}
-                      className="sr-only"
-                    />
-                    <p className="font-semibold">{option.label}</p>
-                    <p className="mt-1 text-xs text-gray-400">{option.note}</p>
-                  </label>
-                ))}
-              </div>
-
+            <form onSubmit={handleLogin} className="space-y-5" autoComplete="off">
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-gray-200">Email address</label>
                 <input
@@ -125,6 +103,7 @@ export default function LoginPage() {
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="off"
                   className="input"
                   disabled={isLoading}
                 />
@@ -138,6 +117,7 @@ export default function LoginPage() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
                     className="input pr-12"
                     disabled={isLoading}
                   />
@@ -165,12 +145,6 @@ export default function LoginPage() {
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </button>
             </form>
-
-            <div className="mt-6 rounded-3xl border border-white/10 bg-black/20 p-4 text-sm text-gray-300">
-              <p className="font-semibold text-primary-accent">Demo access</p>
-              <p className="mt-1">Email: demo@valvoline.com</p>
-              <p>Password: demo123</p>
-            </div>
           </section>
         </div>
       </main>

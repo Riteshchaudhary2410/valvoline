@@ -52,7 +52,7 @@ export async function isAdminSessionValid(sessionToken: string | undefined): Pro
 
 export async function isAdminAuthenticated(request: NextRequest): Promise<boolean> {
   if (!process.env.ADMIN_API_KEY) {
-    return true;
+    return false;
   }
 
   return isAdminSessionValid(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
@@ -62,7 +62,7 @@ export function requireAdmin(request: NextRequest) {
   const adminKey = process.env.ADMIN_API_KEY;
 
   if (!adminKey) {
-    return;
+    throw new ApiError('ADMIN_API_KEY is not configured', 500);
   }
 
   const authorizationHeader = request.headers.get('authorization');

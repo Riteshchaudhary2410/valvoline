@@ -12,6 +12,11 @@ const adminLinks = [
     href: '/admin/products',
     description: 'View the product catalog, inspect records, and remove items when needed.',
   },
+  {
+    title: 'Manage Orders',
+    href: '/admin/orders',
+    description: 'Review customer orders and update delivery status in one place.',
+  },
 ];
 
 export default function AdminPage() {
@@ -33,7 +38,7 @@ export default function AdminPage() {
       </section>
 
       <section className="py-10">
-        <div className="container-max grid gap-6 md:grid-cols-2">
+        <div className="container-max grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {adminLinks.map((link) => (
             <Link
               key={link.href}

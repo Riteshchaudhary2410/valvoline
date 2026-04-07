@@ -1,30 +1,39 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/hooks/store';
+import { registerAccount } from '@/lib/auth-client';
 import { FiEye, FiEyeOff, FiShield, FiCheck } from 'react-icons/fi';
 import { UserRole } from '@/types';
 
 export default function SignupPage() {
   const router = useRouter();
   const { setUser } = useAuth();
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     name: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
     userType: 'CUSTOMER' as UserRole,
     companyName: '',
     gstNumber: '',
+  };
+  const [formData, setFormData] = useState({
+    ...initialFormData,
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    setFormData(initialFormData);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -54,13 +63,24 @@ export default function SignupPage() {
 
       await new Promise((resolve) => setTimeout(resolve, 650));
 
-      setUser({
-        id: `user-${Date.now()}`,
+      const account = registerAccount({
         name: formData.name,
         email: formData.email,
+        password: formData.password,
         role: formData.userType,
-        company: formData.companyName || undefined,
-        gstNumber: formData.gstNumber || undefined,
+        phone: formData.phone,
+        company: formData.companyName,
+        gstNumber: formData.gstNumber,
+      });
+
+      setUser({
+        id: account.id,
+        name: account.name,
+        email: account.email,
+        role: account.role,
+        phone: account.phone,
+        company: account.company,
+        gstNumber: account.gstNumber,
       });
 
       router.push('/dashboard');
@@ -99,7 +119,7 @@ export default function SignupPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
               <div className="grid gap-3 md:grid-cols-3">
                 {[
                   { value: 'CUSTOMER', label: 'Retail' },
@@ -135,7 +155,8 @@ export default function SignupPage() {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    placeholder="John Doe"
+                    placeholder="Enter your full name"
+                    autoComplete="off"
                     className="input"
                     disabled={isLoading}
                   />
@@ -147,11 +168,26 @@ export default function SignupPage() {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="you@example.com"
+                    placeholder="Enter your email"
+                    autoComplete="off"
                     className="input"
                     disabled={isLoading}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-200">Phone number *</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="10-digit mobile number"
+                  autoComplete="off"
+                  className="input"
+                  disabled={isLoading}
+                />
               </div>
 
               {(formData.userType === 'MECHANIC' || formData.userType === 'GARAGE') && (
@@ -193,6 +229,7 @@ export default function SignupPage() {
                       value={formData.password}
                       onChange={handleChange}
                       placeholder="••••••••"
+                      autoComplete="new-password"
                       className="input pr-12"
                       disabled={isLoading}
                     />
@@ -213,6 +250,7 @@ export default function SignupPage() {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     placeholder="••••••••"
+                    autoComplete="new-password"
                     className="input"
                     disabled={isLoading}
                   />
